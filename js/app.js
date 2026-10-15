@@ -33,8 +33,12 @@ const spriteFor = (id, state) =>
 
 const dexEl = document.getElementById('dex');
 const gameEl = document.getElementById('game');
+const searchEl = document.getElementById('search');
+const filterEl = document.getElementById('filter');
+const progressEl = document.getElementById('progress');
 let game = localStorage.getItem('game') || 'national';
 let status = {};
+let list = [];
 
 localStorage.removeItem('species'); // old step-2 cache, replaced by dex:<name>
 
@@ -56,17 +60,47 @@ async function loadDex(name) {
   return list;
 }
 
-function render(list) {
+function render() {
   const pad = list.length >= 1000 ? 4 : 3;
   dexEl.innerHTML = list.map(p => {
     const state = status[p.id] || 'none';
     return `
-    <div class="card ${state}" data-id="${p.id}" data-state="${state}">
+    <div class="card ${state}" data-id="${p.id}" data-state="${state}"
+         data-num="${p.num}" data-name="${p.name.replace(/-/g, ' ')}">
       <img src="${spriteFor(p.id, state)}" alt="${p.name}" loading="lazy">
       <span class="num">#${String(p.num).padStart(pad, '0')}</span>
       <span class="name">${p.name}</span>
     </div>`;
   }).join('');
+  applyFilters();
+  updateProgress();
+}
+
+const FILTERS = {
+  all: () => true,
+  caught: s => s !== 'none', // shiny counts as caught
+  missing: s => s === 'none',
+  shiny: s => s === 'shiny'
+};
+
+function applyFilters() {
+  const q = searchEl.value.trim().toLowerCase().replace(/^#/, '').replace(/-/g, ' ');
+  const isNum = /^\d+$/.test(q);
+  const keep = FILTERS[filterEl.value] || FILTERS.all;
+
+  dexEl.querySelectorAll('.card').forEach(card => {
+    const match = !q ||
+      (isNum ? Number(q) === Number(card.dataset.num) : card.dataset.name.includes(q));
+    card.hidden = !(match && keep(card.dataset.state));
+  });
+}
+
+function updateProgress() {
+  const total = list.length;
+  const caught = list.filter(p => status[p.id]).length;
+  const shiny = list.filter(p => status[p.id] === 'shiny').length;
+  const pct = total ? Math.floor((caught / total) * 100) : 0;
+  progressEl.textContent = `Caught ${caught} / ${total} (${pct}%) · ★ ${shiny}`;
 }
 
 function applyState(card, state) {
@@ -84,29 +118,35 @@ dexEl.addEventListener('click', async e => {
   const prev = card.dataset.state;
   const next = STATES[(STATES.indexOf(prev) + 1) % STATES.length];
 
-  applyState(card, next);
-  if (next === 'none') delete status[id];
-  else status[id] = next;
+  setCard(card, id, next);
 
   try {
     await setStatus(game, id, next);
   } catch (err) {
-    applyState(card, prev);
-    if (prev === 'none') delete status[id];
-    else status[id] = prev;
+    setCard(card, id, prev);
     alert('Could not save: ' + err.message);
   }
 });
+
+function setCard(card, id, state) {
+  applyState(card, state);
+  if (state === 'none') delete status[id];
+  else status[id] = state;
+  applyFilters();
+  updateProgress();
+}
 
 async function showGame(name) {
   game = name;
   localStorage.setItem('game', name);
   dexEl.textContent = 'Loading…';
   try {
-    const [list, saved] = await Promise.all([loadDex(name), getAllStatus(name)]);
+    const [entries, saved] = await Promise.all([loadDex(name), getAllStatus(name)]);
     if (game !== name) return; // user switched again while loading
+    list = entries;
     status = saved;
-    render(list);
+    searchEl.value = '';
+    render();
   } catch (err) {
     if (game === name) dexEl.textContent = 'Could not load: ' + err.message;
   }
@@ -117,5 +157,13 @@ gameEl.innerHTML = GAMES.map(([value, label]) =>
 if (!GAMES.some(([value]) => value === game)) game = 'national';
 gameEl.value = game;
 gameEl.addEventListener('change', () => showGame(gameEl.value));
+
+filterEl.value = localStorage.getItem('filter') || 'all';
+if (!filterEl.value) filterEl.value = 'all';
+filterEl.addEventListener('change', () => {
+  localStorage.setItem('filter', filterEl.value);
+  applyFilters();
+});
+searchEl.addEventListener('input', applyFilters);
 
 showGame(game);

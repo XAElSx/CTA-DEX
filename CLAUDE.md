@@ -25,7 +25,7 @@ Marks are per game. DB key is `<dex>:<speciesId>` (e.g. `national:25`, `paldea:2
 2. Grid from PokéAPI ✅
 3. Caught/shiny + IndexedDB ✅
 4. Dex per game ✅
-5. Filters + search + progress counter
+5. Filters + search + progress counter ✅
 6. PWA
 7. Deploy to GitHub Pages
 8. Sync between devices
