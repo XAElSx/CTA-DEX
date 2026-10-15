@@ -7,6 +7,7 @@ Personal Pokédex tracker modeled on CTA Dex. Static web app (HTML/CSS/JS), late
 - Data: PokéAPI (species list cached in localStorage), sprites from PokeAPI/sprites on GitHub
 - Storage: IndexedDB via `js/db.js` (`getAllStatus`, `setStatus`)
 - Local server: `python -m http.server 8000`
+- Live: https://xaelsx.github.io/CTA-DEX/ (GitHub Pages, deploys from `main` / root on push). Keep all paths relative — the site lives under `/CTA-DEX/`
 - Shell: Windows PowerShell
 
 ## Files
@@ -29,7 +30,7 @@ Marks are per game. DB key is `<dex>:<speciesId>` (e.g. `national:25`, `paldea:2
 4. Dex per game ✅
 5. Filters + search + progress counter ✅
 6. PWA ✅
-7. Deploy to GitHub Pages
+7. Deploy to GitHub Pages ✅
 8. Sync between devices
 
 ## How to work with me
