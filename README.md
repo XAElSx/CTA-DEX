@@ -1,7 +1,7 @@
 # MyDex
 Personal Pokédex tracker for myself. Works in the browser on Windows and Android, and can be installed as an app (PWA).
 
-Live: https://xaelsx.github.io/cta-dex/
+Live: https://xaelsx.github.io/MyDex/
 
 ## Features
 - **Dex per game**: National plus regional dexes (Kanto through Paldea and the DLC dexes), in that dex's order and numbering. Marks are kept per dex.
