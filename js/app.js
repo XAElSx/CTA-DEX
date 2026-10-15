@@ -1,6 +1,6 @@
-import { getAllStatus, setStatus } from './db.js';
+import { getDexRecords, updateRecord } from './db.js';
 import { loadDex, moveLocalCache } from './api.js';
-import { ICONS, VIEWS, spriteFor, cardHTML, boxHTML } from './ui.js';
+import { ICONS, VIEWS, ORIGINS, originTag, spriteFor, cardHTML, boxHTML } from './ui.js';
 import { scheduleSync } from './sync.js';
 
 const STATES = ['none', 'caught', 'shiny'];
@@ -54,10 +54,12 @@ let filter = localStorage.getItem('filter');
 if (!FILTERS[filter]) filter = 'all';
 let view = localStorage.getItem('view');
 if (!VIEWS[view]) view = 'box';
-let status = {};
+let records = {}; // speciesId -> { state, origin } for the current dex
 let list = [];
 
-const stateOf = id => status[id] || 'none';
+const NO_RECORD = { state: 'none', origin: null };
+const recordOf = id => records[id] || NO_RECORD;
+const stateOf = id => recordOf(id).state;
 
 /* ---------- Render ---------- */
 
@@ -77,11 +79,11 @@ function render() {
     const boxes = [];
     for (let i = 0; i < list.length; i += BOX_SIZE) {
       const index = i / BOX_SIZE;
-      boxes.push(boxHTML(list.slice(i, i + BOX_SIZE), index, pad, collapsed.has(index), stateOf));
+      boxes.push(boxHTML(list.slice(i, i + BOX_SIZE), index, pad, collapsed.has(index), recordOf));
     }
     dexEl.innerHTML = boxes.join('');
   } else {
-    dexEl.innerHTML = list.map(p => cardHTML(p, pad, stateOf(p.id))).join('');
+    dexEl.innerHTML = list.map(p => cardHTML(p, pad, recordOf(p.id))).join('');
   }
   applyFilters();
   updateProgress();
@@ -107,8 +109,8 @@ function applyFilters() {
 
 function updateProgress() {
   const total = list.length;
-  const caught = list.filter(p => status[p.id]).length;
-  const shiny = list.filter(p => status[p.id] === 'shiny').length;
+  const caught = list.filter(p => stateOf(p.id) !== 'none').length;
+  const shiny = list.filter(p => stateOf(p.id) === 'shiny').length;
   const pct = total ? Math.floor((caught / total) * 100) : 0;
   progressEl.querySelector('#progress-count').innerHTML =
     `<b>${caught}</b> / ${total}${shiny ? ` <span class="shiny-count">★ ${shiny}</span>` : ''}`;
@@ -124,15 +126,16 @@ function updateProgress() {
   });
 }
 
-// After a sync/import: update only the cards whose state changed.
+// After a sync/import: update only the cards that changed.
 document.addEventListener('dex-synced', async () => {
   const name = game;
-  const saved = await getAllStatus(name);
+  const saved = await getDexRecords(name);
   if (game !== name) return;
-  status = saved;
+  records = saved;
   dexEl.querySelectorAll('.card').forEach(card => {
-    const state = stateOf(card.dataset.id);
+    const { state, origin } = recordOf(card.dataset.id);
     if (card.dataset.state !== state) applyState(card, state);
+    applyOrigin(card, origin);
   });
   applyFilters();
   updateProgress();
@@ -145,6 +148,13 @@ function applyState(card, state) {
   card.querySelector('img').src = spriteFor(card.dataset.id, state);
 }
 
+function applyOrigin(card, origin) {
+  const tag = card.querySelector('.origin-tag');
+  if ((tag?.textContent || null) === origin) return;
+  tag?.remove();
+  if (origin) card.querySelector('.info').insertAdjacentHTML('beforebegin', originTag(origin));
+}
+
 /* ---------- Tap = caught on/off, long press = shiny on/off ---------- */
 
 let press = null;      // { card, x, y, timer } while a finger/mouse is down
@@ -152,7 +162,7 @@ let longPressed = null; // card whose long press just fired; its click is ignore
 
 dexEl.addEventListener('pointerdown', e => {
   const card = e.target.closest('.card');
-  if (!card || (e.pointerType === 'mouse' && e.button !== 0)) return;
+  if (!card || e.target.closest('.info') || (e.pointerType === 'mouse' && e.button !== 0)) return;
   cancelPress();
   longPressed = null; // Android may not send a click after a long press
   press = {
@@ -187,6 +197,9 @@ dexEl.addEventListener('click', e => {
   const head = e.target.closest('.box-head');
   if (head) return toggleBox(head.parentElement);
 
+  const info = e.target.closest('.info');
+  if (info) return openOrigin(info.closest('.card'));
+
   const card = e.target.closest('.card');
   if (!card) return;
   if (longPressed) {
@@ -201,7 +214,7 @@ async function saveState(card, next) {
   const prev = card.dataset.state;
   setCard(card, id, next);
   try {
-    await setStatus(game, id, next);
+    await updateRecord(game, id, { state: next });
     scheduleSync();
   } catch (err) {
     setCard(card, id, prev);
@@ -222,11 +235,51 @@ function toggleBox(box) {
 
 function setCard(card, id, state) {
   applyState(card, state);
-  if (state === 'none') delete status[id];
-  else status[id] = state;
+  records[id] = { ...recordOf(id), state };
   applyFilters();
   updateProgress();
 }
+
+/* ---------- Origin sheet (the "i" button on a card) ---------- */
+
+const sheet = document.getElementById('origin-sheet');
+const originEl = document.getElementById('origin');
+originEl.innerHTML = '<option value="">Not set</option>' +
+  ORIGINS.map(([code, label]) => `<option value="${code}">${label}</option>`).join('');
+let sheetCard = null;
+
+function openOrigin(card) {
+  sheetCard = card;
+  document.getElementById('origin-title').textContent =
+    card.querySelector('.name').textContent + ' — caught in';
+  originEl.value = recordOf(card.dataset.id).origin || '';
+  sheet.showModal();
+}
+
+sheet.addEventListener('close', async () => {
+  const card = sheetCard;
+  sheetCard = null;
+  if (!card || !['save', 'clear'].includes(sheet.returnValue)) return;
+  const id = Number(card.dataset.id);
+  const origin = sheet.returnValue === 'clear' ? null : originEl.value || null;
+  const prev = recordOf(id).origin;
+  if (origin === prev) return;
+  records[id] = { ...recordOf(id), origin };
+  applyOrigin(card, origin);
+  try {
+    await updateRecord(game, id, { origin });
+    scheduleSync();
+  } catch (err) {
+    records[id] = { ...recordOf(id), origin: prev };
+    applyOrigin(card, prev);
+    alert('Could not save: ' + err.message);
+  }
+});
+
+// Tap on the dimmed backdrop closes the sheet
+sheet.addEventListener('click', e => {
+  if (e.target === sheet) sheet.close('cancel');
+});
 
 /* ---------- Game, tabs, view menu ---------- */
 
@@ -236,10 +289,10 @@ async function showGame(name) {
   dexEl.className = '';
   dexEl.innerHTML = '<p class="message">Loading…</p>';
   try {
-    const [entries, saved] = await Promise.all([loadDex(name), getAllStatus(name)]);
+    const [entries, saved] = await Promise.all([loadDex(name), getDexRecords(name)]);
     if (game !== name) return; // user switched again while loading
     list = entries;
-    status = saved;
+    records = saved;
     searchEl.value = '';
     render();
   } catch (err) {

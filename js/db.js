@@ -4,7 +4,7 @@ const OLD_DB_NAME = 'cta-dex'; // name before the rename; copied once, then kept
 const STORE = 'status';
 const CACHE = 'api'; // PokéAPI responses: { url, data }
 
-// Records: { id: '<game>:<speciesId>', state, updated }
+// Records: { id: '<game>:<speciesId>', state, origin?, updated }
 // 'none' is kept as a record (tombstone) so un-marking also syncs.
 let dbPromise;
 
@@ -76,17 +76,32 @@ function writeAll(db, records, name = STORE) {
 
 const keyFor = (game, id) => `${game}:${id}`;
 
-export async function getAllStatus(game) {
+// Records of one dex: { speciesId: { state, origin } }. Plain tombstones are left out.
+export async function getDexRecords(game) {
   const records = await readAll(await openDB(), IDBKeyRange.bound(`${game}:`, `${game}:￿`));
   const map = {};
   records.forEach(r => {
-    if (r.state !== 'none') map[Number(r.id.split(':')[1])] = r.state;
+    if (r.state !== 'none' || r.origin) {
+      map[Number(r.id.split(':')[1])] = { state: r.state, origin: r.origin || null };
+    }
   });
   return map;
 }
 
-export async function setStatus(game, id, state) {
-  return putRecords([{ id: keyFor(game, id), state, updated: Date.now() }]);
+// Read-modify-write, so changing the state keeps the origin and the other way round.
+export async function updateRecord(game, id, patch) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    const store = tx.objectStore(STORE);
+    const key = keyFor(game, id);
+    const req = store.get(key);
+    req.onsuccess = () => {
+      store.put({ state: 'none', ...req.result, ...patch, id: key, updated: Date.now() });
+    };
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
 }
 
 // All records incl. tombstones — used by sync and export.

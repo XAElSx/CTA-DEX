@@ -18,7 +18,8 @@ let syncAgain = false;
 
 const isRecord = r =>
   r && typeof r.id === 'string' && r.id.includes(':') &&
-  ['none', 'caught', 'shiny'].includes(r.state) && Number.isFinite(r.updated);
+  ['none', 'caught', 'shiny'].includes(r.state) && Number.isFinite(r.updated) &&
+  (r.origin == null || typeof r.origin === 'string');
 
 const toFile = records =>
   JSON.stringify({ app: FILE_APP, version: 2, records }, null, 0);

@@ -14,3 +14,6 @@ Choices made where the spec was unclear or conflicted with the existing app.
 - **API cache.** PokéAPI responses are stored in IndexedDB store `api` (keyed by URL). The old localStorage `dex:<name>` lists are moved there once and removed. Preferences (`game`, `view`, `filter`, `boxes:*`, gist settings) stay in localStorage.
 - **Existing, left alone:** dex selector (22 dexes, remembered), search by name or number, import with merge, lazy-loaded sprites.
 - **Export** file is now `mydex-backup-YYYY-MM-DD.json` (local date); the time of the last export is stored in localStorage `lastExport`.
+
+## Part B
+- **B1 Origin.** Stored as `origin` on the existing per-dex record (a short game code such as `SV`, shown as the tag). Saving uses read-modify-write, so tapping a card keeps its origin and the other way round; it syncs like any other change. The tag stays when a card is un-caught (the origin is not deleted by accident). The sheet is a native `<dialog>`: a bottom sheet on phones, centred on wide screens. The "i" button is 44 px in List view, 28 px in Grid · 3, but only 15 px in the 6-column views (Grid · 6, Box): a cell there is about 50 px wide at 360 px, so a 44 px button would cover the sprite. Use List view for easier tapping. Game list is main-series games plus GO and "Other".

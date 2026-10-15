@@ -57,6 +57,18 @@
   <p id="hint">Tap: caught · Hold: shiny</p>
 
   <div id="dex"></div>
+
+  <dialog id="origin-sheet">
+    <form method="dialog">
+      <h2 id="origin-title">Caught in</h2>
+      <select id="origin" aria-label="Game caught in"></select>
+      <div class="sheet-row">
+        <button value="clear">Clear</button>
+        <button value="cancel">Cancel</button>
+        <button value="save" class="primary">Save</button>
+      </div>
+    </form>
+  </dialog>
   <script type="module" src="js/app.js"></script>
 </body>
 </html>

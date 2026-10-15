@@ -19,20 +19,48 @@ export const VIEWS = {
   box: 'Box'
 };
 
+// Games a Pokémon can be caught in: [code stored in the record = tag on the card, label]
+export const ORIGINS = [
+  ['RBY', 'Red / Blue / Yellow'],
+  ['GSC', 'Gold / Silver / Crystal'],
+  ['RSE', 'Ruby / Sapphire / Emerald'],
+  ['FRLG', 'FireRed / LeafGreen'],
+  ['DPPt', 'Diamond / Pearl / Platinum'],
+  ['HGSS', 'HeartGold / SoulSilver'],
+  ['BW', 'Black / White'],
+  ['B2W2', 'Black 2 / White 2'],
+  ['XY', 'X / Y'],
+  ['ORAS', 'Omega Ruby / Alpha Sapphire'],
+  ['SM', 'Sun / Moon'],
+  ['USUM', 'Ultra Sun / Ultra Moon'],
+  ['LGPE', "Let's Go Pikachu / Eevee"],
+  ['SwSh', 'Sword / Shield'],
+  ['BDSP', 'Brilliant Diamond / Shining Pearl'],
+  ['PLA', 'Legends: Arceus'],
+  ['SV', 'Scarlet / Violet'],
+  ['PLZA', 'Legends: Z-A'],
+  ['GO', 'Pokémon GO'],
+  ['Other', 'Other']
+];
+
+export const originTag = origin => (origin ? `<span class="origin-tag">${origin}</span>` : '');
+
 export const spriteFor = (id, state) =>
   state === 'shiny' ? `${SPRITE_BASE}/shiny/${id}.png` : `${SPRITE_BASE}/${id}.png`;
 
-export function cardHTML(p, pad, state) {
+export function cardHTML(p, pad, { state, origin }) {
   return `
     <div class="card ${state}" data-id="${p.id}" data-state="${state}"
          data-num="${p.num}" data-name="${p.name.replace(/-/g, ' ')}">
       <img src="${spriteFor(p.id, state)}" alt="${p.name}" loading="lazy" crossorigin="anonymous" draggable="false">
       <span class="num">#${String(p.num).padStart(pad, '0')}</span>
       <span class="name">${p.name}</span>
+      ${originTag(origin)}
+      <button class="info" aria-label="Origin of ${p.name}">i</button>
     </div>`;
 }
 
-export function boxHTML(chunk, index, pad, closed, stateOf) {
+export function boxHTML(chunk, index, pad, closed, recordOf) {
   return `
     <section class="box${closed ? ' collapsed' : ''}" data-box="${index}">
       <button class="box-head" aria-expanded="${!closed}">
@@ -41,6 +69,6 @@ export function boxHTML(chunk, index, pad, closed, stateOf) {
         <span class="box-count"></span>
         <span class="chevron">${ICONS.chevron}</span>
       </button>
-      <div class="box-grid">${chunk.map(p => cardHTML(p, pad, stateOf(p.id))).join('')}</div>
+      <div class="box-grid">${chunk.map(p => cardHTML(p, pad, recordOf(p.id))).join('')}</div>
     </section>`;
 }
