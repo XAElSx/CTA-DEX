@@ -11,15 +11,16 @@ Personal Pokédex tracker modeled on CTA Dex. Static web app (HTML/CSS/JS), late
 - Shell: Windows PowerShell
 
 ## Files
-- `index.html` — loads `js/db.js` before `js/app.js` (order matters)
-- `js/db.js` — all storage code; only file to change for sync (step 8)
+- `index.html` — loads `js/db.js`, then `js/sync.js`, then `js/app.js` (order matters)
+- `js/db.js` — all IndexedDB code (`getAllStatus`, `setStatus`, `getAllRecords`, `putRecords`)
+- `js/sync.js` — Gist sync + export/import; merge per record, newer `updated` wins. Fires `dex-synced` when local data changed
 - `js/app.js` — load, render, click handling
 - `css/style.css` — styling
 - `sw.js` — service worker: app files network-first, sprites cache-first. Bump `SHELL_CACHE` when the file list changes
 - `manifest.webmanifest`, `icons/` — PWA install data
 
 ## Card states
-`none → caught → shiny → none`. Shiny counts as caught. `none` is deleted from the DB. Each record has an `updated` timestamp for sync later.
+`none → caught → shiny → none`. Shiny counts as caught. `none` is stored as a tombstone record (not deleted) so un-marking syncs too; `getAllStatus` hides it. Each record has an `updated` timestamp for sync later.
 
 Marks are per game. DB key is `<dex>:<speciesId>` (e.g. `national:25`, `paldea:25`), where `<dex>` is the PokéAPI pokedex name. DB v2 migrated v1 numeric ids to `national:<id>`.
 
@@ -31,7 +32,7 @@ Marks are per game. DB key is `<dex>:<speciesId>` (e.g. `national:25`, `paldea:2
 5. Filters + search + progress counter ✅
 6. PWA ✅
 7. Deploy to GitHub Pages ✅
-8. Sync between devices
+8. Sync between devices ✅
 
 ## How to work with me
 - One step at a time. Show the step, then wait for me to reply **y** before the next one.

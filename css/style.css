@@ -98,3 +98,52 @@ header h1 { margin: 0; }
 #progress { color: #bbb; font-size: 14px; }
 
 .card[hidden] { display: none; }
+
+/* Step 8: sync panel */
+#sync-panel { margin-left: auto; position: relative; }
+
+#sync-panel summary {
+  cursor: pointer;
+  padding: 6px 10px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background: #2c2c2c;
+  list-style: none;
+}
+
+#sync-panel.connected summary { border-color: #3fae6a; }
+#sync-status { color: #999; font-size: 13px; }
+#sync-status:not(:empty)::before { content: '· '; }
+
+.sync-body {
+  position: absolute;
+  right: 0;
+  z-index: 10;
+  width: min(320px, calc(100vw - 32px));
+  margin-top: 6px;
+  padding: 10px;
+  border: 1px solid #444;
+  border-radius: 10px;
+  background: #252525;
+  display: grid;
+  gap: 8px;
+}
+
+.sync-row { display: flex; gap: 8px; }
+.sync-row > * { flex: 1; min-width: 0; }
+
+#gist-token,
+.sync-body button,
+.sync-body .button {
+  padding: 6px 10px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background: #2c2c2c;
+  color: #eee;
+  font: inherit;
+  font-size: 14px;
+  text-align: center;
+  cursor: pointer;
+}
+
+#gist-token { flex: 2; cursor: text; }

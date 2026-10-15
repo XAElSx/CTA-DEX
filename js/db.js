@@ -3,6 +3,7 @@ const DB_VERSION = 2;
 const STORE = 'status';
 
 // Records: { id: '<game>:<speciesId>', state, updated }
+// 'none' is kept as a record (tombstone) so un-marking also syncs.
 let dbPromise;
 
 function openDB() {
@@ -47,7 +48,9 @@ async function getAllStatus(game) {
     const req = db.transaction(STORE).objectStore(STORE).getAll(range);
     req.onsuccess = () => {
       const map = {};
-      req.result.forEach(r => (map[Number(r.id.split(':')[1])] = r.state));
+      req.result.forEach(r => {
+        if (r.state !== 'none') map[Number(r.id.split(':')[1])] = r.state;
+      });
       resolve(map);
     };
     req.onerror = () => reject(req.error);
@@ -55,13 +58,25 @@ async function getAllStatus(game) {
 }
 
 async function setStatus(game, id, state) {
+  return putRecords([{ id: keyFor(game, id), state, updated: Date.now() }]);
+}
+
+// All records incl. tombstones — used by sync and export.
+async function getAllRecords() {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const req = db.transaction(STORE).objectStore(STORE).getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function putRecords(records) {
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE, 'readwrite');
     const store = tx.objectStore(STORE);
-    const key = keyFor(game, id);
-    if (state === 'none') store.delete(key);
-    else store.put({ id: key, state, updated: Date.now() });
+    records.forEach(r => store.put(r));
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
   });

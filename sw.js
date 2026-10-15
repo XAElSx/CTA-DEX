@@ -1,5 +1,5 @@
 // Bump when SHELL changes so old caches are cleared.
-const SHELL_CACHE = 'shell-v1';
+const SHELL_CACHE = 'shell-v2';
 const SPRITE_CACHE = 'sprites-v1';
 const SPRITE_HOST = 'raw.githubusercontent.com';
 
@@ -8,6 +8,7 @@ const SHELL = [
   'index.html',
   'css/style.css',
   'js/db.js',
+  'js/sync.js',
   'js/app.js',
   'manifest.webmanifest',
   'icons/icon-192.png',

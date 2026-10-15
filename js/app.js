@@ -103,6 +103,20 @@ function updateProgress() {
   progressEl.textContent = `Caught ${caught} / ${total} (${pct}%) · ★ ${shiny}`;
 }
 
+// After a sync/import: update only the cards whose state changed.
+document.addEventListener('dex-synced', async () => {
+  const name = game;
+  const saved = await getAllStatus(name);
+  if (game !== name) return;
+  status = saved;
+  dexEl.querySelectorAll('.card').forEach(card => {
+    const state = status[card.dataset.id] || 'none';
+    if (card.dataset.state !== state) applyState(card, state);
+  });
+  applyFilters();
+  updateProgress();
+});
+
 function applyState(card, state) {
   card.classList.remove(...STATES);
   card.classList.add(state);
@@ -122,6 +136,7 @@ dexEl.addEventListener('click', async e => {
 
   try {
     await setStatus(game, id, next);
+    scheduleSync();
   } catch (err) {
     setCard(card, id, prev);
     alert('Could not save: ' + err.message);
