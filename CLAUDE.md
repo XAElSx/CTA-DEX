@@ -29,7 +29,7 @@ Personal Pokédex tracker (formerly "CTA Dex"). Static web app (HTML/CSS/JS), la
 - `manifest.webmanifest`, `icons/` — PWA install data
 
 ## Card states
-`none`, `caught`, `shiny` (tap toggles caught, long press toggles shiny). Shiny counts as caught. `none` is stored as a tombstone record (not deleted) so un-marking syncs too; `getAllStatus` hides it. Each record has an `updated` timestamp for sync later.
+`none`, `caught`, `shiny` (tap toggles caught, long press toggles shiny). Shiny counts as caught. `none` is stored as a tombstone record (not deleted) so un-marking syncs too; `getDexRecords` hides it. Records may also hold `origin` (game code). Each record has an `updated` timestamp for sync.
 
 Marks are per game. DB key is `<dex>:<speciesId>` (e.g. `national:25`, `paldea:25`), where `<dex>` is the PokéAPI pokedex name. DB v2 migrated v1 numeric ids to `national:<id>`.
 
