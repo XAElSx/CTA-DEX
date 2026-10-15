@@ -154,6 +154,38 @@ header h1 { margin: 0; }
 #progress-count b { color: var(--text); font-size: 16px; }
 .shiny-count { color: var(--gold); }
 
+/* Per-generation progress (National dex) */
+#gens {
+  margin-bottom: 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  font-size: 14px;
+  color: var(--muted);
+}
+
+#gens[hidden] { display: none; }
+
+#gens summary {
+  min-height: 44px;
+  padding: 12px 14px;
+  cursor: pointer;
+}
+
+#gen-list {
+  display: grid;
+  gap: 8px 24px;
+  padding: 0 14px 12px;
+}
+
+.gen { display: flex; align-items: center; gap: 12px; font-variant-numeric: tabular-nums; }
+.gen-label { width: 3.6em; color: var(--text); }
+.gen-count { min-width: 4.5em; text-align: right; }
+
+@media (min-width: 700px) {
+  #gen-list { grid-template-columns: 1fr 1fr; }
+}
+
 /* ---------- Tabs ---------- */
 #tabs {
   display: flex;

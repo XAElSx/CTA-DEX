@@ -7,6 +7,8 @@ import { searchKey } from './names.js';
 const STATES = ['none', 'caught', 'shiny'];
 const BOX_SIZE = 30;
 const LONG_PRESS = 500; // ms
+// Last National Dex number of each generation
+const GEN_ENDS = [151, 251, 386, 493, 649, 721, 809, 905, 1025];
 const MOVE_SLOP = 10;   // px a finger may move before a long press is cancelled
 
 // value = PokéAPI pokedex name (also the DB key prefix)
@@ -49,6 +51,7 @@ const tabsEl = document.getElementById('tabs');
 const viewBtn = document.getElementById('view-btn');
 const viewMenu = document.getElementById('view-menu');
 const progressEl = document.getElementById('progress');
+const gensEl = document.getElementById('gens');
 
 let game = localStorage.getItem('game') || 'national';
 let filter = localStorage.getItem('filter');
@@ -120,6 +123,8 @@ function updateProgress() {
   progressEl.querySelector('.bar-fill').style.width = pct + '%';
   progressEl.querySelector('#progress-pct').textContent = pct + '%';
 
+  updateGens();
+
   // Box counts use every card in the box, not just the visible ones
   dexEl.querySelectorAll('.box').forEach(box => {
     const cards = box.querySelectorAll('.card');
@@ -128,6 +133,28 @@ function updateProgress() {
     box.querySelector('.bar-fill').style.width = (done / cards.length) * 100 + '%';
   });
 }
+
+// National dex only: one bar per generation, by species id
+function updateGens() {
+  gensEl.hidden = game !== 'national' || !list.length;
+  if (gensEl.hidden) return;
+  const gens = GEN_ENDS.map(() => ({ total: 0, caught: 0 }));
+  list.forEach(p => {
+    const g = GEN_ENDS.findIndex(end => p.id <= end);
+    if (g < 0) return; // newer than Gen 9
+    gens[g].total++;
+    if (stateOf(p.id) !== 'none') gens[g].caught++;
+  });
+  gensEl.querySelector('#gen-list').innerHTML = gens.map(({ total, caught }, i) => `
+    <div class="gen">
+      <span class="gen-label">Gen ${i + 1}</span>
+      <span class="bar"><span class="bar-fill" style="width:${total ? (caught / total) * 100 : 0}%"></span></span>
+      <span class="gen-count">${caught}/${total}</span>
+    </div>`).join('');
+}
+
+gensEl.open = localStorage.getItem('gensOpen') === '1';
+gensEl.addEventListener('toggle', () => localStorage.setItem('gensOpen', gensEl.open ? '1' : '0'));
 
 // After a sync/import: update only the cards that changed.
 document.addEventListener('dex-synced', async () => {
