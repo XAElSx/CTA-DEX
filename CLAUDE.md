@@ -14,6 +14,8 @@ Personal Pokédex tracker modeled on CTA Dex. Static web app (HTML/CSS/JS), late
 - `js/db.js` — all storage code; only file to change for sync (step 8)
 - `js/app.js` — load, render, click handling
 - `css/style.css` — styling
+- `sw.js` — service worker: app files network-first, sprites cache-first. Bump `SHELL_CACHE` when the file list changes
+- `manifest.webmanifest`, `icons/` — PWA install data
 
 ## Card states
 `none → caught → shiny → none`. Shiny counts as caught. `none` is deleted from the DB. Each record has an `updated` timestamp for sync later.
@@ -26,7 +28,7 @@ Marks are per game. DB key is `<dex>:<speciesId>` (e.g. `national:25`, `paldea:2
 3. Caught/shiny + IndexedDB ✅
 4. Dex per game ✅
 5. Filters + search + progress counter ✅
-6. PWA
+6. PWA ✅
 7. Deploy to GitHub Pages
 8. Sync between devices
 

@@ -67,7 +67,7 @@ function render() {
     return `
     <div class="card ${state}" data-id="${p.id}" data-state="${state}"
          data-num="${p.num}" data-name="${p.name.replace(/-/g, ' ')}">
-      <img src="${spriteFor(p.id, state)}" alt="${p.name}" loading="lazy">
+      <img src="${spriteFor(p.id, state)}" alt="${p.name}" loading="lazy" crossorigin="anonymous">
       <span class="num">#${String(p.num).padStart(pad, '0')}</span>
       <span class="name">${p.name}</span>
     </div>`;
@@ -167,3 +167,5 @@ filterEl.addEventListener('change', () => {
 searchEl.addEventListener('input', applyFilters);
 
 showGame(game);
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
