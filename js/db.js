@@ -1,5 +1,6 @@
-const DB_NAME = 'cta-dex'; // old app name, kept on purpose: renaming would hide saved marks
-const DB_VERSION = 2;
+const DB_NAME = 'mydex';
+const DB_VERSION = 1;
+const OLD_DB_NAME = 'cta-dex'; // name before the rename; copied once, then kept as a backup
 const STORE = 'status';
 
 // Records: { id: '<game>:<speciesId>', state, updated }
@@ -11,50 +12,75 @@ function openDB() {
     dbPromise = new Promise((resolve, reject) => {
       const req = indexedDB.open(DB_NAME, DB_VERSION);
       req.onupgradeneeded = e => {
-        const db = req.result;
-        const tx = req.transaction;
-
-        if (e.oldVersion < 1) {
-          db.createObjectStore(STORE, { keyPath: 'id' });
-        }
-
-        // v2: numeric ids → 'national:<id>' (per-game tracking)
-        if (e.oldVersion < 2) {
-          const store = tx.objectStore(STORE);
-          const all = store.getAll();
-          all.onsuccess = () => {
-            all.result.forEach(r => {
-              if (typeof r.id !== 'number') return;
-              store.delete(r.id);
-              store.put({ ...r, id: `national:${r.id}` });
-            });
-          };
-        }
+        if (e.oldVersion < 1) req.result.createObjectStore(STORE, { keyPath: 'id' });
       };
       req.onblocked = () => alert('Close other MyDex tabs to finish the update.');
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
+    }).then(async db => {
+      await migrateOldDB(db);
+      return db;
     });
   }
   return dbPromise;
 }
 
+/* ---------- One-time copy from the old 'cta-dex' database ---------- */
+
+async function migrateOldDB(db) {
+  if (localStorage.getItem('dbMigrated')) return;
+  const old = await openOldDB();
+  if (old) {
+    const records = old.objectStoreNames.contains(STORE) ? await readAll(old) : [];
+    old.close();
+    const mine = new Map((await readAll(db)).map(r => [r.id, r]));
+    const newer = records
+      .map(r => (typeof r.id === 'number' ? { ...r, id: `national:${r.id}` } : r)) // v1 ids
+      .filter(r => !mine.has(r.id) || r.updated > mine.get(r.id).updated);
+    await writeAll(db, newer);
+  }
+  localStorage.setItem('dbMigrated', '1');
+}
+
+// Opens the old database only if it exists: opening a missing name would create it.
+function openOldDB() {
+  return new Promise(resolve => {
+    const req = indexedDB.open(OLD_DB_NAME);
+    req.onupgradeneeded = () => req.transaction.abort(); // did not exist
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = e => { e.preventDefault(); resolve(null); };
+  });
+}
+
+function readAll(db, range) {
+  return new Promise((resolve, reject) => {
+    const req = db.transaction(STORE).objectStore(STORE).getAll(range);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function writeAll(db, records) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    const store = tx.objectStore(STORE);
+    records.forEach(r => store.put(r));
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+/* ---------- Public ---------- */
+
 const keyFor = (game, id) => `${game}:${id}`;
 
 async function getAllStatus(game) {
-  const db = await openDB();
-  const range = IDBKeyRange.bound(`${game}:`, `${game}:￿`);
-  return new Promise((resolve, reject) => {
-    const req = db.transaction(STORE).objectStore(STORE).getAll(range);
-    req.onsuccess = () => {
-      const map = {};
-      req.result.forEach(r => {
-        if (r.state !== 'none') map[Number(r.id.split(':')[1])] = r.state;
-      });
-      resolve(map);
-    };
-    req.onerror = () => reject(req.error);
+  const records = await readAll(await openDB(), IDBKeyRange.bound(`${game}:`, `${game}:￿`));
+  const map = {};
+  records.forEach(r => {
+    if (r.state !== 'none') map[Number(r.id.split(':')[1])] = r.state;
   });
+  return map;
 }
 
 async function setStatus(game, id, state) {
@@ -63,21 +89,9 @@ async function setStatus(game, id, state) {
 
 // All records incl. tombstones — used by sync and export.
 async function getAllRecords() {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const req = db.transaction(STORE).objectStore(STORE).getAll();
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
+  return readAll(await openDB());
 }
 
 async function putRecords(records) {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE, 'readwrite');
-    const store = tx.objectStore(STORE);
-    records.forEach(r => store.put(r));
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
+  return writeAll(await openDB(), records);
 }

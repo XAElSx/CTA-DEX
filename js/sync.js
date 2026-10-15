@@ -1,9 +1,10 @@
 // Sync between devices via a private GitHub Gist, plus manual export/import.
 // Merge rule: per record id, the newer `updated` wins.
 
-// Old app name, kept on purpose: the existing gist and older export files use it.
+// Old app name, kept on purpose: the existing gist and devices on older versions use it.
 const GIST_FILE = 'cta-dex.json';
 const FILE_APP = 'cta-dex';
+const FILE_APPS = [FILE_APP, 'mydex']; // accepted on import
 const GIST_DESC = 'MyDex sync data';
 const GH_API = 'https://api.github.com';
 const SYNC_DELAY = 3000; // ms after the last change
@@ -23,7 +24,7 @@ const toFile = records =>
 
 function fromFile(text) {
   const data = JSON.parse(text);
-  if (!data || data.app !== FILE_APP || !Array.isArray(data.records)) {
+  if (!data || !FILE_APPS.includes(data.app) || !Array.isArray(data.records)) {
     throw new Error('Not a MyDex file');
   }
   return data.records.filter(isRecord);

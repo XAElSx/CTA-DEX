@@ -16,7 +16,8 @@ Personal Pokédex tracker (formerly "CTA Dex"). Static web app (HTML/CSS/JS), la
 - `js/sync.js` — Gist sync + export/import; merge per record, newer `updated` wins. Fires `dex-synced` when local data changed
 - `js/app.js` — load, render, click handling
 - View modes (`list`, `grid3`, `grid6`, `box`) saved in localStorage `view`; Box = groups of 30, collapsed boxes saved per game in `boxes:<game>`
-- Old name `cta-dex` is kept on purpose in data identifiers: IndexedDB `DB_NAME`, gist file `cta-dex.json`, `app` field in sync/export files. Renaming them would lose or split saved data
+- IndexedDB is `mydex`; the old `cta-dex` database is copied once on start and kept as a backup. Old name kept on purpose in the gist file `cta-dex.json` and the `app` field of sync/export files
+- `DECISIONS.md` — choices made where the spec was unclear
 - `ref/` — design screenshots, git-ignored (not published)
 - `css/style.css` — styling
 - `sw.js` — service worker: app files network-first, sprites cache-first. Bump `SHELL_CACHE` when the file list changes
