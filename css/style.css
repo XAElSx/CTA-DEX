@@ -199,6 +199,8 @@ header h1 { margin: 0; }
 .card img {
   display: block;
   image-rendering: pixelated;
+  -webkit-touch-callout: none; /* no "save image" menu on long press */
+  -webkit-user-drag: none;
 }
 
 .card.none img { filter: grayscale(1); opacity: .45; }
@@ -210,14 +212,18 @@ header h1 { margin: 0; }
   border-color: var(--gold);
 }
 
+.card.caught::after,
 .card.shiny::after {
-  content: '★';
+  content: '✓';
   position: absolute;
   top: 2px;
   right: 5px;
   font-size: 12px;
-  color: var(--gold);
+  font-weight: 700;
+  color: var(--accent);
 }
+
+.card.shiny::after { content: '★'; color: var(--gold); font-weight: 400; }
 
 .card[hidden], .box[hidden] { display: none; }
 
@@ -240,6 +246,7 @@ header h1 { margin: 0; }
 
 .view-list .card img { width: 56px; height: 56px; }
 .view-list .num { width: 3.5em; }
+.view-list .card.caught::after,
 .view-list .card.shiny::after { top: 50%; right: 12px; transform: translateY(-50%); font-size: 14px; }
 
 /* Grid 3 / Grid 6 / Box: square cells, sprites only */
@@ -306,6 +313,20 @@ header h1 { margin: 0; }
 @media (min-width: 700px) {
   .view-grid6, .box-grid { gap: 8px; }
   .box-grid { padding: 14px; }
+}
+
+/* ---------- Loading / error ---------- */
+.message { padding: 32px 16px; text-align: center; color: var(--muted); }
+.message.error { color: #ffb4a8; }
+.message button {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
 }
 
 /* ---------- Sync panel ---------- */

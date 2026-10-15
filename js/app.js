@@ -1,7 +1,12 @@
-const API = 'https://pokeapi.co/api/v2/pokedex/';
-const SPRITE_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon';
+import { getAllStatus, setStatus } from './db.js';
+import { loadDex, moveLocalCache } from './api.js';
+import { ICONS, VIEWS, spriteFor, cardHTML, boxHTML } from './ui.js';
+import { scheduleSync } from './sync.js';
+
 const STATES = ['none', 'caught', 'shiny'];
 const BOX_SIZE = 30;
+const LONG_PRESS = 500; // ms
+const MOVE_SLOP = 10;   // px a finger may move before a long press is cancelled
 
 // value = PokéAPI pokedex name (also the DB key prefix)
 const GAMES = [
@@ -29,32 +34,12 @@ const GAMES = [
   ['blueberry', 'Scarlet / Violet — Blueberry']
 ];
 
-const svg = d => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}"/></svg>`;
-const ICONS = {
-  list: svg('M3 5h4v3H3zm6 0h12v3H9zm-6 5.5h4v3H3zm6 0h12v3H9zM3 16h4v3H3zm6 0h12v3H9z'),
-  grid3: svg('M3 3h5v5H3zm6.5 0h5v5h-5zM16 3h5v5h-5zM3 9.5h5v5H3zm6.5 0h5v5h-5zm6.5 0h5v5h-5zM3 16h5v5H3zm6.5 0h5v5h-5zm6.5 0h5v5h-5z'),
-  grid6: svg('M3 4h2.5v2.5H3zm5.2 0h2.5v2.5H8.2zm5.1 0h2.5v2.5h-2.5zm5.2 0H21v2.5h-2.5zM3 10.75h2.5v2.5H3zm5.2 0h2.5v2.5H8.2zm5.1 0h2.5v2.5h-2.5zm5.2 0H21v2.5h-2.5zM3 17.5h2.5V20H3zm5.2 0h2.5V20H8.2zm5.1 0h2.5V20h-2.5zm5.2 0H21V20h-2.5z'),
-  box: svg('M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm0 12h-4a3 3 0 0 1-6 0H5V5h14z'),
-  check: svg('M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'),
-  chevron: svg('M7.41 15.41 12 10.83l4.59 4.58L18 14l-6-6-6 6z')
-};
-
-const VIEWS = {
-  list: 'List',
-  grid3: 'Grid · 3 columns',
-  grid6: 'Grid · 6 columns',
-  box: 'Box'
-};
-
 const FILTERS = {
   all: () => true,
   caught: s => s !== 'none', // shiny counts as caught
   missing: s => s === 'none',
   shiny: s => s === 'shiny'
 };
-
-const spriteFor = (id, state) =>
-  state === 'shiny' ? `${SPRITE_BASE}/shiny/${id}.png` : `${SPRITE_BASE}/${id}.png`;
 
 const dexEl = document.getElementById('dex');
 const gameEl = document.getElementById('game');
@@ -72,58 +57,15 @@ if (!VIEWS[view]) view = 'box';
 let status = {};
 let list = [];
 
-localStorage.removeItem('species'); // old step-2 cache, replaced by dex:<name>
-
-async function loadDex(name) {
-  const cached = localStorage.getItem('dex:' + name);
-  if (cached) return JSON.parse(cached);
-
-  const res = await fetch(API + name);
-  if (!res.ok) throw new Error('PokéAPI error ' + res.status);
-  const data = await res.json();
-
-  const list = data.pokemon_entries.map(e => ({
-    num: e.entry_number,
-    id: Number(e.pokemon_species.url.split('/').filter(Boolean).pop()),
-    name: e.pokemon_species.name
-  }));
-
-  localStorage.setItem('dex:' + name, JSON.stringify(list));
-  return list;
-}
+const stateOf = id => status[id] || 'none';
 
 /* ---------- Render ---------- */
-
-function cardHTML(p, pad) {
-  const state = status[p.id] || 'none';
-  return `
-    <div class="card ${state}" data-id="${p.id}" data-state="${state}"
-         data-num="${p.num}" data-name="${p.name.replace(/-/g, ' ')}">
-      <img src="${spriteFor(p.id, state)}" alt="${p.name}" loading="lazy" crossorigin="anonymous">
-      <span class="num">#${String(p.num).padStart(pad, '0')}</span>
-      <span class="name">${p.name}</span>
-    </div>`;
-}
 
 // Collapsed boxes are stored per game: boxes:<game> = [0, 3, ...]
 const collapsedKey = () => 'boxes:' + game;
 function getCollapsed() {
   try { return new Set(JSON.parse(localStorage.getItem(collapsedKey())) || []); }
   catch { return new Set(); }
-}
-
-function boxHTML(chunk, index, pad, collapsed) {
-  const closed = collapsed.has(index);
-  return `
-    <section class="box${closed ? ' collapsed' : ''}" data-box="${index}">
-      <button class="box-head" aria-expanded="${!closed}">
-        <span class="box-label">${chunk[0].num}-${chunk[chunk.length - 1].num}</span>
-        <span class="bar"><span class="bar-fill"></span></span>
-        <span class="box-count"></span>
-        <span class="chevron">${ICONS.chevron}</span>
-      </button>
-      <div class="box-grid">${chunk.map(p => cardHTML(p, pad)).join('')}</div>
-    </section>`;
 }
 
 function render() {
@@ -134,11 +76,12 @@ function render() {
     const collapsed = getCollapsed();
     const boxes = [];
     for (let i = 0; i < list.length; i += BOX_SIZE) {
-      boxes.push(boxHTML(list.slice(i, i + BOX_SIZE), i / BOX_SIZE, pad, collapsed));
+      const index = i / BOX_SIZE;
+      boxes.push(boxHTML(list.slice(i, i + BOX_SIZE), index, pad, collapsed.has(index), stateOf));
     }
     dexEl.innerHTML = boxes.join('');
   } else {
-    dexEl.innerHTML = list.map(p => cardHTML(p, pad)).join('');
+    dexEl.innerHTML = list.map(p => cardHTML(p, pad, stateOf(p.id))).join('');
   }
   applyFilters();
   updateProgress();
@@ -188,7 +131,7 @@ document.addEventListener('dex-synced', async () => {
   if (game !== name) return;
   status = saved;
   dexEl.querySelectorAll('.card').forEach(card => {
-    const state = status[card.dataset.id] || 'none';
+    const state = stateOf(card.dataset.id);
     if (card.dataset.state !== state) applyState(card, state);
   });
   applyFilters();
@@ -202,21 +145,61 @@ function applyState(card, state) {
   card.querySelector('img').src = spriteFor(card.dataset.id, state);
 }
 
-/* ---------- Tap handling ---------- */
+/* ---------- Tap = caught on/off, long press = shiny on/off ---------- */
 
-dexEl.addEventListener('click', async e => {
+let press = null;      // { card, x, y, timer } while a finger/mouse is down
+let longPressed = null; // card whose long press just fired; its click is ignored
+
+dexEl.addEventListener('pointerdown', e => {
+  const card = e.target.closest('.card');
+  if (!card || (e.pointerType === 'mouse' && e.button !== 0)) return;
+  cancelPress();
+  longPressed = null; // Android may not send a click after a long press
+  press = {
+    card, x: e.clientX, y: e.clientY,
+    timer: setTimeout(() => {
+      press = null;
+      longPressed = card;
+      navigator.vibrate?.(15);
+      const state = card.dataset.state === 'shiny' ? 'caught' : 'shiny';
+      saveState(card, state);
+    }, LONG_PRESS)
+  };
+});
+
+dexEl.addEventListener('pointermove', e => {
+  if (press && Math.hypot(e.clientX - press.x, e.clientY - press.y) > MOVE_SLOP) cancelPress();
+});
+['pointerup', 'pointercancel', 'pointerleave'].forEach(type =>
+  dexEl.addEventListener(type, cancelPress));
+
+function cancelPress() {
+  if (press) clearTimeout(press.timer);
+  press = null;
+}
+
+// Stop the browser's own long-press menu (Android) and right-click menu on cards.
+dexEl.addEventListener('contextmenu', e => {
+  if (e.target.closest('.card')) e.preventDefault();
+});
+
+dexEl.addEventListener('click', e => {
   const head = e.target.closest('.box-head');
   if (head) return toggleBox(head.parentElement);
 
   const card = e.target.closest('.card');
   if (!card) return;
+  if (longPressed) {
+    longPressed = null; // this click ends the long press
+    return;
+  }
+  saveState(card, card.dataset.state === 'none' ? 'caught' : 'none');
+});
 
+async function saveState(card, next) {
   const id = Number(card.dataset.id);
   const prev = card.dataset.state;
-  const next = STATES[(STATES.indexOf(prev) + 1) % STATES.length];
-
   setCard(card, id, next);
-
   try {
     await setStatus(game, id, next);
     scheduleSync();
@@ -224,7 +207,7 @@ dexEl.addEventListener('click', async e => {
     setCard(card, id, prev);
     alert('Could not save: ' + err.message);
   }
-});
+}
 
 function toggleBox(box) {
   const index = Number(box.dataset.box);
@@ -251,7 +234,7 @@ async function showGame(name) {
   game = name;
   localStorage.setItem('game', name);
   dexEl.className = '';
-  dexEl.textContent = 'Loading…';
+  dexEl.innerHTML = '<p class="message">Loading…</p>';
   try {
     const [entries, saved] = await Promise.all([loadDex(name), getAllStatus(name)]);
     if (game !== name) return; // user switched again while loading
@@ -260,7 +243,10 @@ async function showGame(name) {
     searchEl.value = '';
     render();
   } catch (err) {
-    if (game === name) dexEl.textContent = 'Could not load: ' + err.message;
+    if (game !== name) return;
+    dexEl.innerHTML = `<div class="message error"><p>Could not load this Pokédex.</p>
+      <p>${err.message}</p><button id="retry">Try again</button></div>`;
+    document.getElementById('retry').addEventListener('click', () => showGame(name));
   }
 }
 
@@ -329,6 +315,6 @@ document.addEventListener('keydown', e => {
 
 showTabs();
 showViewMenu();
-showGame(game);
+moveLocalCache().finally(() => showGame(game));
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');

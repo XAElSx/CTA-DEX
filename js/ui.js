@@ -1,0 +1,46 @@
+// HTML building blocks. No state and no events here: app.js owns those.
+
+const SPRITE_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon';
+
+const svg = d => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}"/></svg>`;
+export const ICONS = {
+  list: svg('M3 5h4v3H3zm6 0h12v3H9zm-6 5.5h4v3H3zm6 0h12v3H9zM3 16h4v3H3zm6 0h12v3H9z'),
+  grid3: svg('M3 3h5v5H3zm6.5 0h5v5h-5zM16 3h5v5h-5zM3 9.5h5v5H3zm6.5 0h5v5h-5zm6.5 0h5v5h-5zM3 16h5v5H3zm6.5 0h5v5h-5zm6.5 0h5v5h-5z'),
+  grid6: svg('M3 4h2.5v2.5H3zm5.2 0h2.5v2.5H8.2zm5.1 0h2.5v2.5h-2.5zm5.2 0H21v2.5h-2.5zM3 10.75h2.5v2.5H3zm5.2 0h2.5v2.5H8.2zm5.1 0h2.5v2.5h-2.5zm5.2 0H21v2.5h-2.5zM3 17.5h2.5V20H3zm5.2 0h2.5V20H8.2zm5.1 0h2.5V20h-2.5zm5.2 0H21V20h-2.5z'),
+  box: svg('M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm0 12h-4a3 3 0 0 1-6 0H5V5h14z'),
+  check: svg('M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'),
+  chevron: svg('M7.41 15.41 12 10.83l4.59 4.58L18 14l-6-6-6 6z')
+};
+
+export const VIEWS = {
+  list: 'List',
+  grid3: 'Grid · 3 columns',
+  grid6: 'Grid · 6 columns',
+  box: 'Box'
+};
+
+export const spriteFor = (id, state) =>
+  state === 'shiny' ? `${SPRITE_BASE}/shiny/${id}.png` : `${SPRITE_BASE}/${id}.png`;
+
+export function cardHTML(p, pad, state) {
+  return `
+    <div class="card ${state}" data-id="${p.id}" data-state="${state}"
+         data-num="${p.num}" data-name="${p.name.replace(/-/g, ' ')}">
+      <img src="${spriteFor(p.id, state)}" alt="${p.name}" loading="lazy" crossorigin="anonymous" draggable="false">
+      <span class="num">#${String(p.num).padStart(pad, '0')}</span>
+      <span class="name">${p.name}</span>
+    </div>`;
+}
+
+export function boxHTML(chunk, index, pad, closed, stateOf) {
+  return `
+    <section class="box${closed ? ' collapsed' : ''}" data-box="${index}">
+      <button class="box-head" aria-expanded="${!closed}">
+        <span class="box-label">${chunk[0].num}-${chunk[chunk.length - 1].num}</span>
+        <span class="bar"><span class="bar-fill"></span></span>
+        <span class="box-count"></span>
+        <span class="chevron">${ICONS.chevron}</span>
+      </button>
+      <div class="box-grid">${chunk.map(p => cardHTML(p, pad, stateOf(p.id))).join('')}</div>
+    </section>`;
+}

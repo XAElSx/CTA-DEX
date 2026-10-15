@@ -4,17 +4,19 @@ Personal Pokédex tracker (formerly "CTA Dex"). Static web app (HTML/CSS/JS), la
 
 ## Stack
 - Plain HTML, CSS, vanilla JS — no framework, no build step
-- Data: PokéAPI (species list cached in localStorage), sprites from PokeAPI/sprites on GitHub
-- Storage: IndexedDB via `js/db.js` (`getAllStatus`, `setStatus`)
+- Data: PokéAPI (responses cached in IndexedDB), sprites from PokeAPI/sprites on GitHub
+- Storage: IndexedDB via `js/db.js`. ES modules (`type="module"`), no globals
 - Local server: `python -m http.server 8000`
 - Live: https://xaelsx.github.io/cta-dex/ (GitHub Pages, deploys from `main` / root on push). Keep all paths relative — the site lives under `/cta-dex/`
 - Shell: Windows PowerShell
 
 ## Files
-- `index.html` — loads `js/db.js`, then `js/sync.js`, then `js/app.js` (order matters)
-- `js/db.js` — all IndexedDB code (`getAllStatus`, `setStatus`, `getAllRecords`, `putRecords`)
+- `index.html` — loads `js/app.js` as a module; it imports the rest
+- `js/db.js` — all IndexedDB code: `status` store (marks) and `api` store (PokéAPI cache by URL)
+- `js/api.js` — PokéAPI fetches, each URL fetched once then read from IndexedDB
+- `js/ui.js` — HTML builders (cards, boxes, icons); no state
 - `js/sync.js` — Gist sync + export/import; merge per record, newer `updated` wins. Fires `dex-synced` when local data changed
-- `js/app.js` — load, render, click handling
+- `js/app.js` — state, render, events. Tap = caught on/off, long press 500 ms = shiny on/off
 - View modes (`list`, `grid3`, `grid6`, `box`) saved in localStorage `view`; Box = groups of 30, collapsed boxes saved per game in `boxes:<game>`
 - IndexedDB is `mydex`; the old `cta-dex` database is copied once on start and kept as a backup. Old name kept on purpose in the gist file `cta-dex.json` and the `app` field of sync/export files
 - `DECISIONS.md` — choices made where the spec was unclear
@@ -24,7 +26,7 @@ Personal Pokédex tracker (formerly "CTA Dex"). Static web app (HTML/CSS/JS), la
 - `manifest.webmanifest`, `icons/` — PWA install data
 
 ## Card states
-`none → caught → shiny → none`. Shiny counts as caught. `none` is stored as a tombstone record (not deleted) so un-marking syncs too; `getAllStatus` hides it. Each record has an `updated` timestamp for sync later.
+`none`, `caught`, `shiny` (tap toggles caught, long press toggles shiny). Shiny counts as caught. `none` is stored as a tombstone record (not deleted) so un-marking syncs too; `getAllStatus` hides it. Each record has an `updated` timestamp for sync later.
 
 Marks are per game. DB key is `<dex>:<speciesId>` (e.g. `national:25`, `paldea:25`), where `<dex>` is the PokéAPI pokedex name. DB v2 migrated v1 numeric ids to `national:<id>`.
 

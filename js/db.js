@@ -1,7 +1,8 @@
 const DB_NAME = 'mydex';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const OLD_DB_NAME = 'cta-dex'; // name before the rename; copied once, then kept as a backup
 const STORE = 'status';
+const CACHE = 'api'; // PokéAPI responses: { url, data }
 
 // Records: { id: '<game>:<speciesId>', state, updated }
 // 'none' is kept as a record (tombstone) so un-marking also syncs.
@@ -13,6 +14,7 @@ function openDB() {
       const req = indexedDB.open(DB_NAME, DB_VERSION);
       req.onupgradeneeded = e => {
         if (e.oldVersion < 1) req.result.createObjectStore(STORE, { keyPath: 'id' });
+        if (e.oldVersion < 2) req.result.createObjectStore(CACHE, { keyPath: 'url' });
       };
       req.onblocked = () => alert('Close other MyDex tabs to finish the update.');
       req.onsuccess = () => resolve(req.result);
@@ -52,18 +54,18 @@ function openOldDB() {
   });
 }
 
-function readAll(db, range) {
+function readAll(db, range, store = STORE) {
   return new Promise((resolve, reject) => {
-    const req = db.transaction(STORE).objectStore(STORE).getAll(range);
+    const req = db.transaction(store).objectStore(store).getAll(range);
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
   });
 }
 
-function writeAll(db, records) {
+function writeAll(db, records, name = STORE) {
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE, 'readwrite');
-    const store = tx.objectStore(STORE);
+    const tx = db.transaction(name, 'readwrite');
+    const store = tx.objectStore(name);
     records.forEach(r => store.put(r));
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
@@ -74,7 +76,7 @@ function writeAll(db, records) {
 
 const keyFor = (game, id) => `${game}:${id}`;
 
-async function getAllStatus(game) {
+export async function getAllStatus(game) {
   const records = await readAll(await openDB(), IDBKeyRange.bound(`${game}:`, `${game}:￿`));
   const map = {};
   records.forEach(r => {
@@ -83,15 +85,26 @@ async function getAllStatus(game) {
   return map;
 }
 
-async function setStatus(game, id, state) {
+export async function setStatus(game, id, state) {
   return putRecords([{ id: keyFor(game, id), state, updated: Date.now() }]);
 }
 
 // All records incl. tombstones — used by sync and export.
-async function getAllRecords() {
+export async function getAllRecords() {
   return readAll(await openDB());
 }
 
-async function putRecords(records) {
+export async function putRecords(records) {
   return writeAll(await openDB(), records);
+}
+
+/* ---------- PokéAPI cache ---------- */
+
+export async function cacheGet(url) {
+  const [hit] = await readAll(await openDB(), url, CACHE);
+  return hit?.data;
+}
+
+export async function cachePut(url, data) {
+  return writeAll(await openDB(), [{ url, data }], CACHE);
 }

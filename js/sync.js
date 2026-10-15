@@ -1,5 +1,6 @@
 // Sync between devices via a private GitHub Gist, plus manual export/import.
 // Merge rule: per record id, the newer `updated` wins.
+import { getAllRecords, putRecords } from './db.js';
 
 // Old app name, kept on purpose: the existing gist and devices on older versions use it.
 const GIST_FILE = 'cta-dex.json';
@@ -139,7 +140,7 @@ async function syncNow() {
 }
 
 // Called by app.js after each change.
-function scheduleSync() {
+export function scheduleSync() {
   if (!token()) return;
   clearTimeout(syncTimer);
   syncTimer = setTimeout(syncNow, SYNC_DELAY);
@@ -151,13 +152,17 @@ function showSync(text) {
 
 /* ---------- Export / import ---------- */
 
-async function exportFile() {
+export async function exportFile() {
   const blob = new Blob([toFile(await getAllRecords())], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `mydex-${new Date().toISOString().slice(0, 10)}.json`;
+  const now = new Date();
+  const day = new Date(now - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10); // local date
+  a.download = `mydex-backup-${day}.json`;
   a.click();
-  URL.revokeObjectURL(a.href);
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  localStorage.setItem('lastExport', Date.now());
+  document.dispatchEvent(new Event('dex-exported'));
 }
 
 async function importFile(file) {
