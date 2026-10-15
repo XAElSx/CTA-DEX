@@ -46,6 +46,38 @@ header h1 { margin: 0; }
   font: inherit;
 }
 
+/* ---------- Backup reminder ---------- */
+#backup-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 6px 6px 6px 14px;
+  border: 1px solid #6b5a2a;
+  border-radius: 12px;
+  background: #2e2918;
+  color: #f3e3b0;
+  font-size: 14px;
+}
+
+#backup-banner[hidden] { display: none; }
+#backup-text { flex: 1; }
+
+#backup-banner button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#backup-export { background: var(--gold) !important; color: #2b2208 !important; }
+
 /* ---------- Search + view button ---------- */
 #controls {
   display: flex;

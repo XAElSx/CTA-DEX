@@ -1,7 +1,7 @@
-import { getDexRecords, updateRecord } from './db.js';
+import { getDexRecords, updateRecord, getAllRecords } from './db.js';
 import { loadDex, loadExclusives, moveLocalCache } from './api.js';
 import { ICONS, VIEWS, ORIGINS, originTag, spriteFor, cardHTML, boxHTML } from './ui.js';
-import { scheduleSync } from './sync.js';
+import { scheduleSync, exportFile } from './sync.js';
 import { searchKey } from './names.js';
 
 const STATES = ['none', 'caught', 'shiny'];
@@ -9,6 +9,10 @@ const BOX_SIZE = 30;
 const LONG_PRESS = 500; // ms
 // Last National Dex number of each generation
 const GEN_ENDS = [151, 251, 386, 493, 649, 721, 809, 905, 1025];
+const DAY = 24 * 60 * 60 * 1000;
+const BACKUP_AFTER = 14; // days without an export before the reminder shows
+const BACKUP_FIRST = 10; // caught entries before the first reminder
+const BACKUP_SNOOZE = 7; // days the reminder stays away after closing it
 const MOVE_SLOP = 10;   // px a finger may move before a long press is cancelled
 
 // value = PokéAPI pokedex name (also the DB key prefix)
@@ -247,6 +251,7 @@ async function saveState(card, next) {
   try {
     await updateRecord(game, id, { state: next });
     scheduleSync();
+    checkBackup();
   } catch (err) {
     setCard(card, id, prev);
     alert('Could not save: ' + err.message);
@@ -311,6 +316,38 @@ sheet.addEventListener('close', async () => {
 sheet.addEventListener('click', e => {
   if (e.target === sheet) sheet.close('cancel');
 });
+
+/* ---------- Backup reminder ---------- */
+
+const bannerEl = document.getElementById('backup-banner');
+
+async function checkBackup() {
+  const now = Date.now();
+  const last = Number(localStorage.getItem('lastExport')) || 0;
+  let show = false;
+  let text = '';
+  if (Number(localStorage.getItem('backupSnooze')) > now) {
+    show = false;
+  } else if (last) {
+    const days = Math.floor((now - last) / DAY);
+    show = days > BACKUP_AFTER;
+    text = `Last backup: ${days} days ago`;
+  } else {
+    const caught = (await getAllRecords()).filter(r => r.state !== 'none').length;
+    show = caught >= BACKUP_FIRST;
+    text = 'Last backup: never';
+  }
+  document.getElementById('backup-text').textContent = text;
+  bannerEl.hidden = !show;
+}
+
+document.getElementById('backup-export').addEventListener('click', exportFile);
+document.getElementById('backup-close').addEventListener('click', () => {
+  localStorage.setItem('backupSnooze', Date.now() + BACKUP_SNOOZE * DAY);
+  bannerEl.hidden = true;
+});
+document.addEventListener('dex-exported', checkBackup);
+document.addEventListener('dex-synced', checkBackup);
 
 /* ---------- Game, tabs, view menu ---------- */
 
@@ -402,5 +439,6 @@ document.addEventListener('keydown', e => {
 showTabs();
 showViewMenu();
 moveLocalCache().finally(() => showGame(game));
+checkBackup();
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
