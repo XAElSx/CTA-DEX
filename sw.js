@@ -1,5 +1,5 @@
 // Bump when SHELL changes so old caches are cleared.
-const SHELL_CACHE = 'shell-v2';
+const SHELL_CACHE = 'shell-v3';
 const SPRITE_CACHE = 'sprites-v1';
 const SPRITE_HOST = 'raw.githubusercontent.com';
 

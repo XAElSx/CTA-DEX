@@ -1,59 +1,31 @@
 * { box-sizing: border-box; }
 
+:root {
+  --bg: #1e1e1e;
+  --panel: #26282d;
+  --line: #383b42;
+  --text: #eee;
+  --muted: #9a9ca3;
+  --accent: #8ec5ff;      /* light blue: caught, active tab, active view */
+  --accent-ink: #10233b;  /* text on accent */
+  --gold: #f2c94c;
+  --missing: #1a1b1f;     /* darker card */
+  --caught: #2c323c;      /* lighter card */
+}
+
 body {
-  margin: 0;
+  max-width: 960px;
+  margin: 0 auto;
   padding: 16px;
   font-family: system-ui, sans-serif;
-  background: #1e1e1e;
-  color: #eee;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-tap-highlight-color: transparent;
 }
 
-#dex {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  gap: 8px;
-}
+svg { width: 24px; height: 24px; fill: currentColor; flex: none; }
 
-.card {
-  background: #2c2c2c;
-  border-radius: 10px;
-  padding: 8px;
-  text-align: center;
-  cursor: pointer;
-}
-
-.card img {
-  width: 96px;
-  height: 96px;
-  image-rendering: pixelated;
-}
-
-.num  { display: block; font-size: 12px; color: #999; }
-.name { display: block; text-transform: capitalize; }
-
-/* Step 3.4: card states */
-.card {
-  border: 2px solid transparent;
-  transition: background .15s, border-color .15s, opacity .15s;
-  user-select: none;
-}
-
-.card.none img { filter: grayscale(1); opacity: .45; }
-
-.card.caught {
-  background: #1f3a2a;
-  border-color: #3fae6a;
-}
-
-.card.shiny {
-  background: #3a3320;
-  border-color: #f2c94c;
-  box-shadow: 0 0 8px rgba(242, 201, 76, .5);
-}
-
-.card.shiny .name::after { content: ' ★'; color: #f2c94c; }
-
-/* Step 4: game picker */
+/* ---------- Header ---------- */
 header {
   display: flex;
   flex-wrap: wrap;
@@ -67,52 +39,289 @@ header h1 { margin: 0; }
 #game {
   max-width: 100%;
   padding: 6px 10px;
-  border: 1px solid #444;
+  border: 1px solid var(--line);
   border-radius: 8px;
-  background: #2c2c2c;
-  color: #eee;
+  background: var(--panel);
+  color: var(--text);
   font: inherit;
 }
 
-/* Step 5: search, filter, progress */
+/* ---------- Search + view button ---------- */
 #controls {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 12px;
-  margin-bottom: 16px;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
-#search,
-#filter {
-  padding: 6px 10px;
-  border: 1px solid #444;
-  border-radius: 8px;
-  background: #2c2c2c;
-  color: #eee;
+#search {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--text);
   font: inherit;
 }
 
-#search { flex: 1 1 180px; min-width: 0; }
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+}
 
-#progress { color: #bbb; font-size: 14px; }
+.icon-btn[aria-expanded="true"] { border-color: var(--accent); color: var(--accent); }
 
-.card[hidden] { display: none; }
+.view-wrap { position: relative; }
 
-/* Step 8: sync panel */
+#view-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  width: min(280px, calc(100vw - 32px));
+  padding: 6px 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .5);
+}
+
+#view-menu[hidden] { display: none; }
+
+.view-opt {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 12px 16px;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.view-opt > svg { color: #bdb59f; }
+.view-opt .check { margin-left: auto; visibility: hidden; display: grid; }
+.view-opt:hover, .view-opt:focus-visible { background: #2e3138; outline: none; }
+
+.view-opt[aria-checked="true"] { background: #313844; color: var(--accent); }
+.view-opt[aria-checked="true"] > svg { color: var(--accent); }
+.view-opt[aria-checked="true"] .check { visibility: visible; }
+
+/* ---------- Progress ---------- */
+.bar {
+  flex: 1;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.bar-fill {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--accent);
+  transition: width .2s;
+}
+
+#progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  font-size: 14px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+#progress-count b { color: var(--text); font-size: 16px; }
+.shiny-count { color: var(--gold); }
+
+/* ---------- Tabs ---------- */
+#tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.tab {
+  flex: 1;
+  padding: 9px 0;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tab[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+
+#hint {
+  margin: 12px 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ---------- Cards (all views) ---------- */
+.card {
+  position: relative;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: var(--missing);
+  cursor: pointer;
+  user-select: none;
+  transition: background .15s, border-color .15s;
+}
+
+.card img {
+  display: block;
+  image-rendering: pixelated;
+}
+
+.card.none img { filter: grayscale(1); opacity: .45; }
+
+.card.caught { background: var(--caught); border-color: var(--accent); }
+
+.card.shiny {
+  background: #3a3320;
+  border-color: var(--gold);
+}
+
+.card.shiny::after {
+  content: '★';
+  position: absolute;
+  top: 2px;
+  right: 5px;
+  font-size: 12px;
+  color: var(--gold);
+}
+
+.card[hidden], .box[hidden] { display: none; }
+
+.num  { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.name { text-transform: capitalize; }
+
+/* List: one row per Pokémon */
+.view-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.view-list .card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 2px 12px 2px 4px;
+}
+
+.view-list .card img { width: 56px; height: 56px; }
+.view-list .num { width: 3.5em; }
+.view-list .card.shiny::after { top: 50%; right: 12px; transform: translateY(-50%); font-size: 14px; }
+
+/* Grid 3 / Grid 6 / Box: square cells, sprites only */
+.view-grid3, .view-grid6, .box-grid { display: grid; }
+.view-grid3 { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.view-grid6, .box-grid { grid-template-columns: repeat(6, 1fr); gap: 6px; }
+
+.view-grid3 .card, .view-grid6 .card, .box-grid .card {
+  aspect-ratio: 1;
+  min-width: 0;
+  padding: 2px;
+  overflow: hidden;
+}
+
+/* PokéAPI sprites have wide empty margins, so zoom them to fill the cell */
+.view-grid3 .card img, .view-grid6 .card img, .box-grid .card img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform: scale(1.35);
+}
+
+.view-grid3 .num, .view-grid3 .name,
+.view-grid6 .num, .view-grid6 .name,
+.box-grid .num, .box-grid .name { display: none; }
+
+/* Box: groups of 30 */
+.box {
+  margin-bottom: 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #222428;
+  overflow: hidden;
+}
+
+.box-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.box-label { font-weight: 700; font-variant-numeric: tabular-nums; }
+.box-count { font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.chevron { display: grid; color: var(--muted); transition: transform .15s; }
+.chevron svg { width: 20px; height: 20px; }
+
+.box-grid { padding: 10px; }
+
+.box.collapsed .box-head { border-bottom: 0; }
+.box.collapsed .chevron { transform: rotate(180deg); }
+.box.collapsed .box-grid { display: none; }
+
+/* While searching, show matches even in collapsed boxes */
+.searching .box.collapsed .box-grid { display: grid; }
+
+@media (min-width: 700px) {
+  .view-grid6, .box-grid { gap: 8px; }
+  .box-grid { padding: 14px; }
+}
+
+/* ---------- Sync panel ---------- */
 #sync-panel { margin-left: auto; position: relative; }
 
 #sync-panel summary {
   cursor: pointer;
   padding: 6px 10px;
-  border: 1px solid #444;
+  border: 1px solid var(--line);
   border-radius: 8px;
-  background: #2c2c2c;
+  background: var(--panel);
   list-style: none;
 }
 
 #sync-panel.connected summary { border-color: #3fae6a; }
-#sync-status { color: #999; font-size: 13px; }
+#sync-status { color: var(--muted); font-size: 13px; }
 #sync-status:not(:empty)::before { content: '· '; }
 
 .sync-body {
@@ -122,7 +331,7 @@ header h1 { margin: 0; }
   width: min(320px, calc(100vw - 32px));
   margin-top: 6px;
   padding: 10px;
-  border: 1px solid #444;
+  border: 1px solid var(--line);
   border-radius: 10px;
   background: #252525;
   display: grid;
@@ -136,10 +345,10 @@ header h1 { margin: 0; }
 .sync-body button,
 .sync-body .button {
   padding: 6px 10px;
-  border: 1px solid #444;
+  border: 1px solid var(--line);
   border-radius: 8px;
-  background: #2c2c2c;
-  color: #eee;
+  background: var(--panel);
+  color: var(--text);
   font: inherit;
   font-size: 14px;
   text-align: center;

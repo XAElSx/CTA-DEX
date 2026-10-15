@@ -32,16 +32,30 @@
       </div>
     </details>
   </header>
+
   <div id="controls">
-    <input id="search" type="search" placeholder="Search name or #" aria-label="Search">
-    <select id="filter" aria-label="Filter">
-      <option value="all">All</option>
-      <option value="caught">Caught</option>
-      <option value="missing">Missing</option>
-      <option value="shiny">Shiny</option>
-    </select>
-    <span id="progress"></span>
+    <input id="search" type="search" placeholder="Search by name or number" aria-label="Search">
+    <div class="view-wrap">
+      <button id="view-btn" class="icon-btn" aria-haspopup="menu" aria-expanded="false" aria-label="View"></button>
+      <div id="view-menu" role="menu" hidden></div>
+    </div>
   </div>
+
+  <div id="progress">
+    <span id="progress-count"></span>
+    <div class="bar"><div class="bar-fill"></div></div>
+    <span id="progress-pct"></span>
+  </div>
+
+  <div id="tabs" role="tablist" aria-label="Filter">
+    <button class="tab" role="tab" data-filter="all">All</button>
+    <button class="tab" role="tab" data-filter="caught">Caught</button>
+    <button class="tab" role="tab" data-filter="missing">Missing</button>
+    <button class="tab" role="tab" data-filter="shiny">Shiny</button>
+  </div>
+
+  <p id="hint">Tap to mark: caught → shiny → none</p>
+
   <div id="dex"></div>
   <script src="js/db.js"></script>
   <script src="js/sync.js"></script>

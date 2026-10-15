@@ -15,6 +15,8 @@ Personal Pokédex tracker modeled on CTA Dex. Static web app (HTML/CSS/JS), late
 - `js/db.js` — all IndexedDB code (`getAllStatus`, `setStatus`, `getAllRecords`, `putRecords`)
 - `js/sync.js` — Gist sync + export/import; merge per record, newer `updated` wins. Fires `dex-synced` when local data changed
 - `js/app.js` — load, render, click handling
+- View modes (`list`, `grid3`, `grid6`, `box`) saved in localStorage `view`; Box = groups of 30, collapsed boxes saved per game in `boxes:<game>`
+- `ref/` — design screenshots, git-ignored (not published)
 - `css/style.css` — styling
 - `sw.js` — service worker: app files network-first, sprites cache-first. Bump `SHELL_CACHE` when the file list changes
 - `manifest.webmanifest`, `icons/` — PWA install data
