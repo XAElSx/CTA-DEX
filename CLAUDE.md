@@ -18,11 +18,13 @@ Personal Pokédex tracker modeled on CTA Dex. Static web app (HTML/CSS/JS), late
 ## Card states
 `none → caught → shiny → none`. Shiny counts as caught. `none` is deleted from the DB. Each record has an `updated` timestamp for sync later.
 
+Marks are per game. DB key is `<dex>:<speciesId>` (e.g. `national:25`, `paldea:25`), where `<dex>` is the PokéAPI pokedex name. DB v2 migrated v1 numeric ids to `national:<id>`.
+
 ## Roadmap
 1. Setup ✅
 2. Grid from PokéAPI ✅
 3. Caught/shiny + IndexedDB ✅
-4. Dex per game
+4. Dex per game ✅
 5. Filters + search + progress counter
 6. PWA
 7. Deploy to GitHub Pages
