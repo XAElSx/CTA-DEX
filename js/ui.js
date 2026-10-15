@@ -64,7 +64,8 @@ export function boxHTML(chunk, index, pad, closed, recordOf) {
   return `
     <section class="box${closed ? ' collapsed' : ''}" data-box="${index}">
       <button class="box-head" aria-expanded="${!closed}">
-        <span class="box-label">${chunk[0].num}-${chunk[chunk.length - 1].num}</span>
+        <span class="box-label">Box ${index + 1}</span>
+        <span class="box-range">${chunk[0].num}–${chunk[chunk.length - 1].num}</span>
         <span class="bar"><span class="bar-fill"></span></span>
         <span class="box-count"></span>
         <span class="chevron">${ICONS.chevron}</span>

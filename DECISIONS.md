@@ -17,3 +17,6 @@ Choices made where the spec was unclear or conflicted with the existing app.
 
 ## Part B
 - **B1 Origin.** Stored as `origin` on the existing per-dex record (a short game code such as `SV`, shown as the tag). Saving uses read-modify-write, so tapping a card keeps its origin and the other way round; it syncs like any other change. The tag stays when a card is un-caught (the origin is not deleted by accident). The sheet is a native `<dialog>`: a bottom sheet on phones, centred on wide screens. The "i" button is 44 px in List view, 28 px in Grid · 3, but only 15 px in the 6-column views (Grid · 6, Box): a cell there is about 50 px wide at 360 px, so a 44 px button would cover the sprite. Use List view for easier tapping. Game list is main-series games plus GO and "Other".
+- **B2 Box view** already existed (boxes of 30, 6 columns, collapsible, per-box progress). Only added the "Box N" header; the number range stays next to it.
+- **B3 Compact view** already exists as the view menu (List, Grid · 3, Grid · 6, Box), remembered in localStorage. Kept as a 4-way switch instead of 3-way: it already includes Grid, Box and List. Not changed.
+- **B4 Missing only** already exists as the "Missing" tab (All / Caught / Missing / Shiny). Not changed.

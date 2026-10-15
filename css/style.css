@@ -296,7 +296,8 @@ header h1 { margin: 0; }
   cursor: pointer;
 }
 
-.box-label { font-weight: 700; font-variant-numeric: tabular-nums; }
+.box-label { font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.box-range { margin-left: -6px; font-size: 13px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .box-count { font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .chevron { display: grid; color: var(--muted); transition: transform .15s; }
 .chevron svg { width: 20px; height: 20px; }
