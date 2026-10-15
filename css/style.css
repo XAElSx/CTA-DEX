@@ -151,7 +151,9 @@ header h1 { margin: 0; }
   font-variant-numeric: tabular-nums;
 }
 
+#progress-count { white-space: nowrap; }
 #progress-count b { color: var(--text); font-size: 16px; }
+#progress-shiny { white-space: nowrap; }
 .shiny-count { color: var(--gold); }
 
 /* Per-generation progress (National dex) */

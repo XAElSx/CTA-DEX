@@ -119,9 +119,10 @@ function updateProgress() {
   const shiny = list.filter(p => stateOf(p.id) === 'shiny').length;
   const pct = total ? Math.floor((caught / total) * 100) : 0;
   progressEl.querySelector('#progress-count').innerHTML =
-    `<b>${caught}</b> / ${total}${shiny ? ` <span class="shiny-count">★ ${shiny}</span>` : ''}`;
+    `<b>${caught}</b> / ${total} caught (${pct}%)`;
   progressEl.querySelector('.bar-fill').style.width = pct + '%';
-  progressEl.querySelector('#progress-pct').textContent = pct + '%';
+  progressEl.querySelector('#progress-shiny').textContent = `★ ${shiny}`;
+  progressEl.querySelector('#progress-shiny').title = `${shiny} shiny`;
 
   updateGens();
 
