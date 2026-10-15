@@ -439,7 +439,7 @@ header h1 { margin: 0; }
 .view-grid3 .origin-tag { left: 3px; bottom: 3px; max-width: calc(100% - 36px); font-size: 11px; }
 
 /* List rows have room for a full 44px button and an inline tag */
-.view-list .card { padding-right: 52px; }
+.view-list .card { padding-right: 76px; } /* room for ✓/★ and the "i" button */
 .view-list .info { top: 50%; right: 4px; bottom: auto; width: 44px; height: 44px; border: 0; background: none; font-size: 16px; transform: translateY(-50%); }
 .view-list .origin-tag { position: static; margin-left: auto; font-size: 11px; }
 .view-list .card.caught::after,

@@ -25,3 +25,11 @@ Choices made where the spec was unclear or conflicted with the existing app.
 - **B7 Generation progress.** Shown only for the National dex, as a collapsible panel under the main progress bar (closed by default to save space on phones; open/closed is remembered in localStorage `gensOpen`). Generations are split by National Dex number: 151, 251, 386, 493, 649, 721, 809, 905, 1025.
 - **B8 Completion %** already existed as the progress panel (count, bar, %, live). Only the text changed to "X / Y caught (Z%)" and the shiny count (★ N) is now always shown instead of only when above 0. Percent is rounded down, so 100% means complete.
 - **B9 Backup reminder.** Shows when the last export is more than 14 days old, or when there has never been an export and at least 10 entries are caught (across all dexes). Closing it hides it for 7 days (localStorage `backupSnooze`). Only a file export counts as a backup; Gist sync does not, because the spec ties the reminder to exports.
+
+## UI
+- The top bar keeps its existing layout: title, dex selector and the Sync menu (which holds export/import) on top; search and the view switch below; the Missing filter is a tab. Nothing was moved, so existing users find everything where it was.
+
+## Not done / to check by hand
+- Service worker and offline mode can't be tested in headless Chrome (CacheStorage fails there); check on a real device.
+- Long press was tested with simulated pointer events; check it once on the Android phone.
+- The "i" button is smaller than 44 px in the 6-column views (see B1).
