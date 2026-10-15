@@ -2,6 +2,7 @@ import { getDexRecords, updateRecord } from './db.js';
 import { loadDex, loadExclusives, moveLocalCache } from './api.js';
 import { ICONS, VIEWS, ORIGINS, originTag, spriteFor, cardHTML, boxHTML } from './ui.js';
 import { scheduleSync } from './sync.js';
+import { searchKey } from './names.js';
 
 const STATES = ['none', 'caught', 'shiny'];
 const BOX_SIZE = 30;
@@ -92,7 +93,7 @@ function render() {
 }
 
 function applyFilters() {
-  const q = searchEl.value.trim().toLowerCase().replace(/^#/, '').replace(/-/g, ' ');
+  const q = searchKey(searchEl.value.replace(/^\s*#/, ''));
   const isNum = /^\d+$/.test(q);
   const keep = FILTERS[filter];
 

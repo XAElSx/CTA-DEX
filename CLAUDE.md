@@ -15,6 +15,7 @@ Personal Pokédex tracker (formerly "CTA Dex"). Static web app (HTML/CSS/JS), la
 - `js/db.js` — all IndexedDB code: `status` store (marks) and `api` store (PokéAPI cache by URL)
 - `js/api.js` — PokéAPI fetches, each URL fetched once then read from IndexedDB
 - `js/ui.js` — HTML builders (cards, boxes, icons); no state
+- `js/names.js` — display names (title case + special cases) and `searchKey` for search
 - `js/sync.js` — Gist sync + export/import; merge per record, newer `updated` wins. Fires `dex-synced` when local data changed
 - `js/app.js` — state, render, events. Tap = caught on/off, long press 500 ms = shiny on/off
 - View modes (`list`, `grid3`, `grid6`, `box`) saved in localStorage `view`; Box = groups of 30, collapsed boxes saved per game in `boxes:<game>`

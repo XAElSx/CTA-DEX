@@ -10,6 +10,7 @@ const SHELL = [
   'js/db.js',
   'js/api.js',
   'js/ui.js',
+  'js/names.js',
   'js/sync.js',
   'js/app.js',
   'data/exclusives.json',

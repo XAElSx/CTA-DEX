@@ -1,4 +1,5 @@
 // HTML building blocks. No state and no events here: app.js owns those.
+import { displayName, searchKey } from './names.js';
 
 const SPRITE_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon';
 
@@ -53,15 +54,18 @@ const versionBadge = v =>
   (v ? `<span class="version" style="--v:${v.color}" title="${v.name} exclusive">${v.tag}</span>` : '');
 
 export function cardHTML(p, pad, { state, origin }, version) {
+  const name = displayName(p.name);
+  // Search matches the display name and the API name ("nidoran f", "farfetchd")
+  const keys = [...new Set([searchKey(name), searchKey(p.name)])].join('|');
   return `
     <div class="card ${state}" data-id="${p.id}" data-state="${state}"
-         data-num="${p.num}" data-name="${p.name.replace(/-/g, ' ')}">
-      <img src="${spriteFor(p.id, state)}" alt="${p.name}" loading="lazy" crossorigin="anonymous" draggable="false">
+         data-num="${p.num}" data-name="${keys}">
+      <img src="${spriteFor(p.id, state)}" alt="${name}" loading="lazy" crossorigin="anonymous" draggable="false">
       <span class="num">#${String(p.num).padStart(pad, '0')}</span>
-      <span class="name">${p.name}</span>
+      <span class="name">${name}</span>
       ${versionBadge(version)}
       ${originTag(origin)}
-      <button class="info" aria-label="Origin of ${p.name}">i</button>
+      <button class="info" aria-label="Origin of ${name}">i</button>
     </div>`;
 }
 
