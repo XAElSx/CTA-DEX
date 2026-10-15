@@ -1,5 +1,5 @@
 import { getDexRecords, updateRecord } from './db.js';
-import { loadDex, moveLocalCache } from './api.js';
+import { loadDex, loadExclusives, moveLocalCache } from './api.js';
 import { ICONS, VIEWS, ORIGINS, originTag, spriteFor, cardHTML, boxHTML } from './ui.js';
 import { scheduleSync } from './sync.js';
 
@@ -56,6 +56,8 @@ let view = localStorage.getItem('view');
 if (!VIEWS[view]) view = 'box';
 let records = {}; // speciesId -> { state, origin } for the current dex
 let list = [];
+let versions = new Map(); // speciesId -> version-exclusive info for the current dex
+const versionOf = id => versions.get(id);
 
 const NO_RECORD = { state: 'none', origin: null };
 const recordOf = id => records[id] || NO_RECORD;
@@ -79,11 +81,11 @@ function render() {
     const boxes = [];
     for (let i = 0; i < list.length; i += BOX_SIZE) {
       const index = i / BOX_SIZE;
-      boxes.push(boxHTML(list.slice(i, i + BOX_SIZE), index, pad, collapsed.has(index), recordOf));
+      boxes.push(boxHTML(list.slice(i, i + BOX_SIZE), index, pad, collapsed.has(index), recordOf, versionOf));
     }
     dexEl.innerHTML = boxes.join('');
   } else {
-    dexEl.innerHTML = list.map(p => cardHTML(p, pad, recordOf(p.id))).join('');
+    dexEl.innerHTML = list.map(p => cardHTML(p, pad, recordOf(p.id), versionOf(p.id))).join('');
   }
   applyFilters();
   updateProgress();
@@ -289,10 +291,12 @@ async function showGame(name) {
   dexEl.className = '';
   dexEl.innerHTML = '<p class="message">Loading…</p>';
   try {
-    const [entries, saved] = await Promise.all([loadDex(name), getDexRecords(name)]);
+    const [entries, saved, exclusive] =
+      await Promise.all([loadDex(name), getDexRecords(name), loadExclusives(name)]);
     if (game !== name) return; // user switched again while loading
     list = entries;
     records = saved;
+    versions = exclusive;
     searchEl.value = '';
     render();
   } catch (err) {

@@ -30,6 +30,21 @@ export async function loadDex(name) {
   }));
 }
 
+// Version exclusives for one dex: Map speciesId -> { name, tag, color }.
+// Empty when the dex has none, or when the file can't be loaded (badges are optional).
+let exclusives;
+export async function loadExclusives(dex) {
+  exclusives ??= fetch('data/exclusives.json')
+    .then(res => (res.ok ? res.json() : { pairs: [] }))
+    .catch(() => ({ pairs: [] }));
+  const { pairs } = await exclusives;
+  const map = new Map();
+  pairs.filter(p => p.dexes.includes(dex)).forEach(p =>
+    p.versions.forEach(({ name, tag, color, ids }) =>
+      ids.forEach(id => map.set(id, { name, tag, color }))));
+  return map;
+}
+
 // Older versions cached dex lists in localStorage as dex:<name>. Move them over once.
 export async function moveLocalCache() {
   localStorage.removeItem('species'); // step-2 cache, no longer used

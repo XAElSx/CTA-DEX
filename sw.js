@@ -12,6 +12,7 @@ const SHELL = [
   'js/ui.js',
   'js/sync.js',
   'js/app.js',
+  'data/exclusives.json',
   'manifest.webmanifest',
   'icons/icon-192.png',
   'icons/icon-512.png',

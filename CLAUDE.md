@@ -20,6 +20,7 @@ Personal Pokédex tracker (formerly "CTA Dex"). Static web app (HTML/CSS/JS), la
 - View modes (`list`, `grid3`, `grid6`, `box`) saved in localStorage `view`; Box = groups of 30, collapsed boxes saved per game in `boxes:<game>`
 - IndexedDB is `mydex`; the old `cta-dex` database is copied once on start and kept as a backup. Old name kept on purpose in the gist file `cta-dex.json` and the `app` field of sync/export files
 - `DECISIONS.md` — choices made where the spec was unclear
+- `data/exclusives.json` — version exclusives per dex (badges on cards)
 - `ref/` — design screenshots, git-ignored (not published)
 - `css/style.css` — styling
 - `sw.js` — service worker: app files network-first, sprites cache-first. Bump `SHELL_CACHE` when the file list changes

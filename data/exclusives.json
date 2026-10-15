@@ -1,0 +1,107 @@
+{
+ "_source": "Version exclusives per species (National Dex ids). Source: Serebii.net exclusives pages (serebii.net/<game>/exclusives.shtml), Red/Blue from the international release lists. Species with a different regional form in each version (Tauros in Scarlet/Violet, Basculin and Indeedee in Sword/Shield) and Mega Evolutions in X/Y are left out because marks are per species. Only base-game lists; DLC dexes get no badges.",
+ "pairs": [
+  {
+   "pair": "red-blue",
+   "dexes": [
+    "kanto"
+   ],
+   "versions": [
+    {
+     "name": "Red",
+     "tag": "R",
+     "color": "#e5534b",
+     "ids": [23, 24, 43, 44, 45, 56, 57, 58, 59, 123, 125]
+    },
+    {
+     "name": "Blue",
+     "tag": "B",
+     "color": "#4f8fe8",
+     "ids": [27, 28, 37, 38, 52, 53, 69, 70, 71, 126, 127]
+    }
+   ]
+  },
+  {
+   "pair": "x-y",
+   "dexes": [
+    "kalos-central",
+    "kalos-coastal",
+    "kalos-mountain"
+   ],
+   "versions": [
+    {
+     "name": "X",
+     "tag": "X",
+     "color": "#3f8ee0",
+     "ids": [120, 121, 127, 228, 229, 261, 262, 304, 305, 306, 345, 346, 347, 348, 539, 684, 685, 692, 693, 716]
+    },
+    {
+     "name": "Y",
+     "tag": "Y",
+     "color": "#e0504f",
+     "ids": [90, 91, 138, 139, 140, 141, 214, 246, 247, 248, 309, 310, 509, 510, 538, 682, 683, 690, 691, 717]
+    }
+   ]
+  },
+  {
+   "pair": "sun-moon",
+   "dexes": [
+    "original-alola"
+   ],
+   "versions": [
+    {
+     "name": "Sun",
+     "tag": "Su",
+     "color": "#f0a030",
+     "ids": [37, 38, 408, 409, 546, 547, 564, 565, 627, 628, 766, 776, 791, 794, 798]
+    },
+    {
+     "name": "Moon",
+     "tag": "Mo",
+     "color": "#7a6fe0",
+     "ids": [27, 28, 410, 411, 548, 549, 566, 567, 629, 630, 765, 780, 792, 795, 797]
+    }
+   ]
+  },
+  {
+   "pair": "sword-shield",
+   "dexes": [
+    "galar"
+   ],
+   "versions": [
+    {
+     "name": "Sword",
+     "tag": "Sw",
+     "color": "#3aa0e0",
+     "ids": [68, 83, 127, 138, 139, 250, 273, 274, 275, 303, 338, 371, 372, 373, 381, 383, 483, 554, 555, 559, 560, 574, 575, 576, 627, 628, 633, 634, 635, 641, 643, 684, 685, 716, 766, 776, 782, 783, 784, 791, 839, 841, 865, 874, 888]
+    },
+    {
+     "name": "Shield",
+     "tag": "Sh",
+     "color": "#e04f7a",
+     "ids": [77, 78, 94, 131, 140, 141, 214, 222, 246, 247, 248, 249, 270, 271, 272, 302, 337, 380, 382, 443, 444, 445, 453, 454, 484, 577, 578, 579, 629, 630, 642, 644, 682, 683, 704, 705, 706, 717, 765, 780, 792, 842, 864, 875, 889]
+    }
+   ]
+  },
+  {
+   "pair": "scarlet-violet",
+   "dexes": [
+    "paldea"
+   ],
+   "versions": [
+    {
+     "name": "Scarlet",
+     "tag": "Sc",
+     "color": "#e4483f",
+     "ids": [37, 38, 207, 246, 247, 248, 408, 409, 425, 426, 434, 435, 472, 633, 634, 635, 690, 691, 765, 845, 874, 936, 984, 985, 986, 987, 988, 989, 1005, 1007, 1009, 1020, 1021]
+    },
+    {
+     "name": "Violet",
+     "tag": "Vi",
+     "color": "#9b5de5",
+     "ids": [27, 28, 190, 200, 316, 317, 371, 372, 373, 410, 411, 424, 429, 692, 693, 766, 875, 877, 885, 886, 887, 937, 990, 991, 992, 993, 994, 995, 1006, 1008, 1010, 1022, 1023]
+    }
+   ]
+  }
+ ]
+}

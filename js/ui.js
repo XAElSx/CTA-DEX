@@ -48,19 +48,24 @@ export const originTag = origin => (origin ? `<span class="origin-tag">${origin}
 export const spriteFor = (id, state) =>
   state === 'shiny' ? `${SPRITE_BASE}/shiny/${id}.png` : `${SPRITE_BASE}/${id}.png`;
 
-export function cardHTML(p, pad, { state, origin }) {
+// Small corner badge for a version-exclusive species
+const versionBadge = v =>
+  (v ? `<span class="version" style="--v:${v.color}" title="${v.name} exclusive">${v.tag}</span>` : '');
+
+export function cardHTML(p, pad, { state, origin }, version) {
   return `
     <div class="card ${state}" data-id="${p.id}" data-state="${state}"
          data-num="${p.num}" data-name="${p.name.replace(/-/g, ' ')}">
       <img src="${spriteFor(p.id, state)}" alt="${p.name}" loading="lazy" crossorigin="anonymous" draggable="false">
       <span class="num">#${String(p.num).padStart(pad, '0')}</span>
       <span class="name">${p.name}</span>
+      ${versionBadge(version)}
       ${originTag(origin)}
       <button class="info" aria-label="Origin of ${p.name}">i</button>
     </div>`;
 }
 
-export function boxHTML(chunk, index, pad, closed, recordOf) {
+export function boxHTML(chunk, index, pad, closed, recordOf, versionOf) {
   return `
     <section class="box${closed ? ' collapsed' : ''}" data-box="${index}">
       <button class="box-head" aria-expanded="${!closed}">
@@ -70,6 +75,6 @@ export function boxHTML(chunk, index, pad, closed, recordOf) {
         <span class="box-count"></span>
         <span class="chevron">${ICONS.chevron}</span>
       </button>
-      <div class="box-grid">${chunk.map(p => cardHTML(p, pad, recordOf(p.id))).join('')}</div>
+      <div class="box-grid">${chunk.map(p => cardHTML(p, pad, recordOf(p.id), versionOf(p.id))).join('')}</div>
     </section>`;
 }
