@@ -14,6 +14,8 @@ const BACKUP_AFTER = 14; // days without an export before the reminder shows
 const BACKUP_FIRST = 10; // caught entries before the first reminder
 const BACKUP_SNOOZE = 7; // days the reminder stays away after closing it
 const MOVE_SLOP = 10;   // px a finger may move before a long press is cancelled
+const MULTI_TAP = 350;  // ms between taps of a double tap / triple click
+const LIVING_TAPS = { touch: 2, mouse: 3 }; // double tap on a phone, triple click on PC
 
 // value = PokéAPI pokedex name (also the DB key prefix)
 const GAMES = [
@@ -41,11 +43,13 @@ const GAMES = [
   ['blueberry', 'Scarlet / Violet — Blueberry']
 ];
 
+// Each filter gets a card element
 const FILTERS = {
   all: () => true,
-  caught: s => s !== 'none', // shiny counts as caught
-  missing: s => s === 'none',
-  shiny: s => s === 'shiny'
+  caught: c => c.dataset.state !== 'none', // shiny counts as caught
+  missing: c => c.dataset.state === 'none',
+  shiny: c => c.dataset.state === 'shiny',
+  living: c => c.dataset.living === '1'
 };
 
 const dexEl = document.getElementById('dex');
@@ -62,12 +66,12 @@ let filter = localStorage.getItem('filter');
 if (!FILTERS[filter]) filter = 'all';
 let view = localStorage.getItem('view');
 if (!VIEWS[view]) view = 'box';
-let records = {}; // speciesId -> { state, origin } for the current dex
+let records = {}; // speciesId -> { state, origin, living } for the current dex
 let list = [];
 let versions = new Map(); // speciesId -> version-exclusive info for the current dex
 const versionOf = id => versions.get(id);
 
-const NO_RECORD = { state: 'none', origin: null };
+const NO_RECORD = { state: 'none', origin: null, living: false };
 const recordOf = id => records[id] || NO_RECORD;
 const stateOf = id => recordOf(id).state;
 
@@ -107,7 +111,7 @@ function applyFilters() {
   dexEl.querySelectorAll('.card').forEach(card => {
     const match = !q ||
       (isNum ? Number(q) === Number(card.dataset.num) : card.dataset.name.includes(q));
-    card.hidden = !(match && keep(card.dataset.state));
+    card.hidden = !(match && keep(card));
   });
 
   // Box view: hide boxes with no visible cards; open all boxes while searching
@@ -168,19 +172,23 @@ document.addEventListener('dex-synced', async () => {
   if (game !== name) return;
   records = saved;
   dexEl.querySelectorAll('.card').forEach(card => {
-    const { state, origin } = recordOf(card.dataset.id);
-    if (card.dataset.state !== state) applyState(card, state);
-    applyOrigin(card, origin);
+    const rec = recordOf(card.dataset.id);
+    applyMarks(card, rec);
+    applyOrigin(card, rec.origin);
   });
   applyFilters();
   updateProgress();
 });
 
-function applyState(card, state) {
-  card.classList.remove(...STATES);
-  card.classList.add(state);
-  card.dataset.state = state;
-  card.querySelector('img').src = spriteFor(card.dataset.id, state);
+function applyMarks(card, { state, living }) {
+  if (card.dataset.state !== state) {
+    card.classList.remove(...STATES);
+    card.classList.add(state);
+    card.dataset.state = state;
+    card.querySelector('img').src = spriteFor(card.dataset.id, state);
+  }
+  card.classList.toggle('living', living);
+  card.dataset.living = living ? 1 : 0;
 }
 
 function applyOrigin(card, origin) {
@@ -190,24 +198,28 @@ function applyOrigin(card, origin) {
   if (origin) card.querySelector('.info').insertAdjacentHTML('beforebegin', originTag(origin));
 }
 
-/* ---------- Tap = caught on/off, long press = shiny on/off ---------- */
+/* ---------- Tap = caught on/off, long press = shiny on/off,
+   double tap (touch) / triple click (mouse) = living dex on/off ---------- */
 
 let press = null;      // { card, x, y, timer } while a finger/mouse is down
 let longPressed = null; // card whose long press just fired; its click is ignored
+let pointerType = 'mouse'; // of the last press, to pick double tap or triple click
+let taps = null;       // { card, count, before, time } for multi-tap detection
 
 dexEl.addEventListener('pointerdown', e => {
   const card = e.target.closest('.card');
   if (!card || e.target.closest('.info') || (e.pointerType === 'mouse' && e.button !== 0)) return;
   cancelPress();
   longPressed = null; // Android may not send a click after a long press
+  pointerType = e.pointerType === 'mouse' ? 'mouse' : 'touch';
   press = {
     card, x: e.clientX, y: e.clientY,
     timer: setTimeout(() => {
       press = null;
       longPressed = card;
       navigator.vibrate?.(15);
-      const state = card.dataset.state === 'shiny' ? 'caught' : 'shiny';
-      saveState(card, state);
+      taps = null;
+      saveMarks(card, { state: card.dataset.state === 'shiny' ? 'caught' : 'shiny' });
     }, LONG_PRESS)
   };
 });
@@ -241,15 +253,37 @@ dexEl.addEventListener('click', e => {
     longPressed = null; // this click ends the long press
     return;
   }
-  saveState(card, card.dataset.state === 'none' ? 'caught' : 'none');
+
+  // Every tap toggles caught right away. When the taps add up to a double tap / triple click,
+  // the card goes back to how it was before the first tap and living dex is toggled instead.
+  const now = Date.now();
+  if (taps && taps.card === card && now - taps.time < MULTI_TAP) taps.count++;
+  else taps = { card, count: 1, before: recordOf(card.dataset.id) };
+  taps.time = now;
+
+  const needed = LIVING_TAPS[pointerType];
+  if (taps.count === needed) {
+    const { state, living } = taps.before;
+    taps = null;
+    navigator.vibrate?.(15);
+    return saveMarks(card, living
+      ? { state, living: false }
+      : { state: state === 'none' ? 'caught' : state, living: true }); // living implies caught
+  }
+  if (taps.count > needed) return;
+
+  saveMarks(card, card.dataset.state === 'none'
+    ? { state: 'caught' }
+    : { state: 'none', living: false }); // un-catching also removes it from the living dex
 });
 
-async function saveState(card, next) {
+// patch = { state?, living? }
+async function saveMarks(card, patch) {
   const id = Number(card.dataset.id);
-  const prev = card.dataset.state;
-  setCard(card, id, next);
+  const prev = recordOf(id);
+  setCard(card, id, patch);
   try {
-    await updateRecord(game, id, { state: next });
+    await updateRecord(game, id, patch);
     scheduleSync();
     checkBackup();
   } catch (err) {
@@ -269,11 +303,14 @@ function toggleBox(box) {
   localStorage.setItem(collapsedKey(), JSON.stringify([...collapsed]));
 }
 
-function setCard(card, id, state) {
-  applyState(card, state);
-  records[id] = { ...recordOf(id), state };
-  applyFilters();
+let filterTimer = null;
+function setCard(card, id, patch) {
+  records[id] = { ...recordOf(id), ...patch };
+  applyMarks(card, records[id]);
   updateProgress();
+  // Filter a little later, so a card doesn't disappear between the taps of a double tap
+  clearTimeout(filterTimer);
+  filterTimer = setTimeout(applyFilters, MULTI_TAP + 50);
 }
 
 /* ---------- Origin sheet (the "i" button on a card) ---------- */

@@ -11,6 +11,7 @@
   --gold: #f2c94c;
   --missing: #1a1b1f;     /* darker card */
   --caught: #2c323c;      /* lighter card */
+  --living: #4cc38a;      /* green: in the living dex */
 }
 
 body {
@@ -232,7 +233,11 @@ header h1 { margin: 0; }
 
 .tab {
   flex: 1;
-  padding: 9px 0;
+  min-width: 0;
+  min-height: 40px;
+  padding: 4px 2px;
+  font-size: 14px;
+  line-height: 1.15;
   border: 0;
   border-radius: 9px;
   background: none;
@@ -290,6 +295,13 @@ header h1 { margin: 0; }
 }
 
 .card.shiny::after { content: '★'; color: var(--gold); font-weight: 400; }
+
+/* Living dex: green border and check; a shiny keeps its gold border with a green inner ring */
+.card.living { border-color: var(--living); }
+.card.living::after { color: var(--living); }
+.card.shiny.living { border-color: var(--gold); box-shadow: inset 0 0 0 2px var(--living); }
+.card.shiny.living::after { color: var(--gold); }
+.card { touch-action: manipulation; } /* no double-tap zoom on cards */
 
 .card[hidden], .box[hidden] { display: none; }
 

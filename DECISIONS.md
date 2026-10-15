@@ -33,3 +33,9 @@ Choices made where the spec was unclear or conflicted with the existing app.
 - Service worker and offline mode can't be tested in headless Chrome (CacheStorage fails there); check on a real device.
 - Long press was tested with simulated pointer events; check it once on the Android phone.
 - The "i" button is smaller than 44 px in the 6-column views (see B1).
+
+## Living Dex
+- **Gesture.** Double tap on touch screens, triple click with a mouse, toggles "in living dex". Every tap still toggles caught at once (no delay on single taps); when the taps add up to a double tap / triple click, the card goes back to how it was before the first tap and only the living mark changes. Taps must be under 350 ms apart.
+- **Data.** Stored as `living: true` on the existing record, so it syncs and exports. Living implies caught: marking a missing Pokémon as living also marks it caught, and un-catching it (single tap) removes it from the living dex. Long press (shiny) keeps the living mark.
+- **Look.** Living cards get a green border and check; a shiny living card keeps its gold border with a green inner ring.
+- **Tab.** "Living Dex" shows only living cards. Filters now apply 400 ms after a tap, so a card doesn't vanish from the Missing/Caught tab between the taps of a double tap.

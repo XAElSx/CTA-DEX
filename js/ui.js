@@ -53,12 +53,12 @@ export const spriteFor = (id, state) =>
 const versionBadge = v =>
   (v ? `<span class="version" style="--v:${v.color}" title="${v.name} exclusive">${v.tag}</span>` : '');
 
-export function cardHTML(p, pad, { state, origin }, version) {
+export function cardHTML(p, pad, { state, origin, living }, version) {
   const name = displayName(p.name);
   // Search matches the display name and the API name ("nidoran f", "farfetchd")
   const keys = [...new Set([searchKey(name), searchKey(p.name)])].join('|');
   return `
-    <div class="card ${state}" data-id="${p.id}" data-state="${state}"
+    <div class="card ${state}${living ? ' living' : ''}" data-id="${p.id}" data-state="${state}" data-living="${living ? 1 : 0}"
          data-num="${p.num}" data-name="${keys}">
       <img src="${spriteFor(p.id, state)}" alt="${name}" loading="lazy" crossorigin="anonymous" draggable="false">
       <span class="num">#${String(p.num).padStart(pad, '0')}</span>

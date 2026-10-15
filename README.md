@@ -6,11 +6,12 @@ Live: https://xaelsx.github.io/MyDex/
 ## Features
 - **Dex per game**: National plus regional dexes (Kanto through Paldea and the DLC dexes), in that dex's order and numbering. Marks are kept per dex.
 - **Mark Pokémon**: tap a card for caught (✓); hold it for half a second for shiny (★). Uncaught cards are dimmed.
+- **Living Dex**: double tap a card (triple click on PC) to mark it as part of your living dex (green). The *Living Dex* tab shows only those.
 - **Origin**: the small "i" button on a card sets the game it was caught in; the game shows as a tag on the card.
 - **Version exclusives**: in Red/Blue, X/Y, Sun/Moon, Sword/Shield and Scarlet/Violet dexes, exclusive Pokémon get a version badge.
 - **Views**: List, Grid · 3 columns, Grid · 6 columns, and Box (boxes of 30, like Pokémon HOME). Collapsed boxes are remembered.
 - **Search** by name or number, with proper names (Mr. Mime, Type: Null, Flabébé…). Accents and punctuation don't matter.
-- **Filters**: All, Caught, Missing, Shiny.
+- **Filters**: All, Caught, Missing, Shiny, Living Dex.
 - **Progress**: "X / Y caught (Z%)" plus a shiny count for the selected dex; in the National dex also a bar per generation.
 - **Backup**: export to `mydex-backup-YYYY-MM-DD.json` and import (merges, newest change wins). A banner reminds you when the last export is over 14 days old.
 - **Sync between devices** through a private GitHub Gist.

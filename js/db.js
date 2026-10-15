@@ -4,7 +4,7 @@ const OLD_DB_NAME = 'cta-dex'; // name before the rename; copied once, then kept
 const STORE = 'status';
 const CACHE = 'api'; // PokéAPI responses: { url, data }
 
-// Records: { id: '<game>:<speciesId>', state, origin?, updated }
+// Records: { id: '<game>:<speciesId>', state, origin?, living?, updated }
 // 'none' is kept as a record (tombstone) so un-marking also syncs.
 let dbPromise;
 
@@ -76,13 +76,13 @@ function writeAll(db, records, name = STORE) {
 
 const keyFor = (game, id) => `${game}:${id}`;
 
-// Records of one dex: { speciesId: { state, origin } }. Plain tombstones are left out.
+// Records of one dex: { speciesId: { state, origin, living } }. Plain tombstones are left out.
 export async function getDexRecords(game) {
   const records = await readAll(await openDB(), IDBKeyRange.bound(`${game}:`, `${game}:￿`));
   const map = {};
   records.forEach(r => {
     if (r.state !== 'none' || r.origin) {
-      map[Number(r.id.split(':')[1])] = { state: r.state, origin: r.origin || null };
+      map[Number(r.id.split(':')[1])] = { state: r.state, origin: r.origin || null, living: !!r.living };
     }
   });
   return map;

@@ -17,7 +17,7 @@ Personal Pokédex tracker (formerly "CTA Dex"). Static web app (HTML/CSS/JS), la
 - `js/ui.js` — HTML builders (cards, boxes, icons); no state
 - `js/names.js` — display names (title case + special cases) and `searchKey` for search
 - `js/sync.js` — Gist sync + export/import; merge per record, newer `updated` wins. Fires `dex-synced` when local data changed
-- `js/app.js` — state, render, events. Tap = caught on/off, long press 500 ms = shiny on/off
+- `js/app.js` — state, render, events. Tap = caught on/off, long press 500 ms = shiny on/off, double tap (touch) / triple click (mouse) = living dex on/off
 - localStorage also holds `lastExport`, `backupSnooze` (backup banner) and `gensOpen` (generation panel)
 - View modes (`list`, `grid3`, `grid6`, `box`) saved in localStorage `view`; Box = groups of 30, collapsed boxes saved per game in `boxes:<game>`
 - IndexedDB is `mydex`; the old `cta-dex` database is copied once on start and kept as a backup. Old name kept on purpose in the gist file `cta-dex.json` and the `app` field of sync/export files
@@ -29,7 +29,7 @@ Personal Pokédex tracker (formerly "CTA Dex"). Static web app (HTML/CSS/JS), la
 - `manifest.webmanifest`, `icons/` — PWA install data
 
 ## Card states
-`none`, `caught`, `shiny` (tap toggles caught, long press toggles shiny). Shiny counts as caught. `none` is stored as a tombstone record (not deleted) so un-marking syncs too; `getDexRecords` hides it. Records may also hold `origin` (game code). Each record has an `updated` timestamp for sync.
+`none`, `caught`, `shiny` (tap toggles caught, long press toggles shiny). Shiny counts as caught. `none` is stored as a tombstone record (not deleted) so un-marking syncs too; `getDexRecords` hides it. Records may also hold `origin` (game code) and `living` (true = in the living dex; implies caught). Each record has an `updated` timestamp for sync.
 
 Marks are per game. DB key is `<dex>:<speciesId>` (e.g. `national:25`, `paldea:25`), where `<dex>` is the PokéAPI pokedex name. DB v2 migrated v1 numeric ids to `national:<id>`.
 
