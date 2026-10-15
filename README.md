@@ -1,4 +1,4 @@
-# CTA-DEX
-cta-dex for myself
+# MyDex
+Personal Pokédex tracker for myself
 
 Live: https://xaelsx.github.io/CTA-DEX/

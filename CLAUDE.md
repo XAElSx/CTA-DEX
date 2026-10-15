@@ -1,6 +1,6 @@
-# CTA Dex
+# MyDex
 
-Personal Pokédex tracker modeled on CTA Dex. Static web app (HTML/CSS/JS), later a PWA for Windows PC and Android.
+Personal Pokédex tracker (formerly "CTA Dex"). Static web app (HTML/CSS/JS), later a PWA for Windows PC and Android.
 
 ## Stack
 - Plain HTML, CSS, vanilla JS — no framework, no build step
@@ -16,6 +16,7 @@ Personal Pokédex tracker modeled on CTA Dex. Static web app (HTML/CSS/JS), late
 - `js/sync.js` — Gist sync + export/import; merge per record, newer `updated` wins. Fires `dex-synced` when local data changed
 - `js/app.js` — load, render, click handling
 - View modes (`list`, `grid3`, `grid6`, `box`) saved in localStorage `view`; Box = groups of 30, collapsed boxes saved per game in `boxes:<game>`
+- Old name `cta-dex` is kept on purpose in data identifiers: IndexedDB `DB_NAME`, gist file `cta-dex.json`, `app` field in sync/export files. Renaming them would lose or split saved data
 - `ref/` — design screenshots, git-ignored (not published)
 - `css/style.css` — styling
 - `sw.js` — service worker: app files network-first, sprites cache-first. Bump `SHELL_CACHE` when the file list changes
@@ -37,7 +38,7 @@ Marks are per game. DB key is `<dex>:<speciesId>` (e.g. `national:25`, `paldea:2
 8. Sync between devices ✅
 
 ## How to work with me
-- One step at a time. Show the step, then wait for me to reply **y** before the next one.
+- Do all steps of a task at once; no need to wait for **y** between steps.
 - Explain what each extra part does and why the step is needed (short tables are fine).
 - Keep text minimal and structured.
 - Ask before running git commit or push.

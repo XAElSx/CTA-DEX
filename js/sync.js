@@ -1,7 +1,10 @@
 // Sync between devices via a private GitHub Gist, plus manual export/import.
 // Merge rule: per record id, the newer `updated` wins.
 
+// Old app name, kept on purpose: the existing gist and older export files use it.
 const GIST_FILE = 'cta-dex.json';
+const FILE_APP = 'cta-dex';
+const GIST_DESC = 'MyDex sync data';
 const GH_API = 'https://api.github.com';
 const SYNC_DELAY = 3000; // ms after the last change
 
@@ -16,12 +19,12 @@ const isRecord = r =>
   ['none', 'caught', 'shiny'].includes(r.state) && Number.isFinite(r.updated);
 
 const toFile = records =>
-  JSON.stringify({ app: 'cta-dex', version: 2, records }, null, 0);
+  JSON.stringify({ app: FILE_APP, version: 2, records }, null, 0);
 
 function fromFile(text) {
   const data = JSON.parse(text);
-  if (!data || data.app !== 'cta-dex' || !Array.isArray(data.records)) {
-    throw new Error('Not a CTA Dex file');
+  if (!data || data.app !== FILE_APP || !Array.isArray(data.records)) {
+    throw new Error('Not a MyDex file');
   }
   return data.records.filter(isRecord);
 }
@@ -70,7 +73,7 @@ async function gh(path, options = {}) {
   return res.json();
 }
 
-// Find the CTA Dex gist on this account, or create one.
+// Find the MyDex gist on this account (by file name), or create one.
 async function findGist() {
   const saved = localStorage.getItem('gistId');
   if (saved) return saved;
@@ -84,7 +87,7 @@ async function findGist() {
   const created = await gh('/gists', {
     method: 'POST',
     body: JSON.stringify({
-      description: 'CTA Dex sync data',
+      description: GIST_DESC,
       public: false,
       files: { [GIST_FILE]: { content: toFile(await getAllRecords()) } }
     })
@@ -121,7 +124,7 @@ async function syncNow() {
     if (remoteStale) {
       await gh('/gists/' + id, {
         method: 'PATCH',
-        body: JSON.stringify({ files: { [GIST_FILE]: { content: toFile(merged) } } })
+        body: JSON.stringify({ description: GIST_DESC, files: { [GIST_FILE]: { content: toFile(merged) } } })
       });
     }
     showSync('Synced ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
@@ -151,7 +154,7 @@ async function exportFile() {
   const blob = new Blob([toFile(await getAllRecords())], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `cta-dex-${new Date().toISOString().slice(0, 10)}.json`;
+  a.download = `mydex-${new Date().toISOString().slice(0, 10)}.json`;
   a.click();
   URL.revokeObjectURL(a.href);
 }

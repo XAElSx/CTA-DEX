@@ -1,4 +1,4 @@
-const DB_NAME = 'cta-dex';
+const DB_NAME = 'cta-dex'; // old app name, kept on purpose: renaming would hide saved marks
 const DB_VERSION = 2;
 const STORE = 'status';
 
@@ -31,7 +31,7 @@ function openDB() {
           };
         }
       };
-      req.onblocked = () => alert('Close other CTA Dex tabs to finish the update.');
+      req.onblocked = () => alert('Close other MyDex tabs to finish the update.');
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
     });

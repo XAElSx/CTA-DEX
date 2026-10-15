@@ -1,6 +1,6 @@
 {
-  "name": "CTA Dex",
-  "short_name": "CTA Dex",
+  "name": "MyDex",
+  "short_name": "MyDex",
   "description": "Personal Pokédex tracker",
   "start_url": "./",
   "scope": "./",
